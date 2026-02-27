@@ -22,13 +22,7 @@ export default function CommunityPage() {
               <img src="/icon_nostr.png" alt="Nostr" className="w-8 h-8" />
               <span className="text-gray-300">Nostr</span>
             </a>
-            <a href="https://t.me/+991twmY_VvFmNTQx"
-               target="_blank"
-               className="flex items-center space-x-3 p-3 bg-[#121212] rounded-lg hover:bg-[#383838] transition-colors">
-              <img src="/icon_Telegram.png" alt="Telegram" className="w-8 h-8" />
-              <span className="text-gray-300">Telegram Group</span>
-            </a>
-            <a href="https://signal.group/#CjQKIBbC7YbkMlJ-BHQftEAT5YmXF_OLnWnDGRdHavPeRR0qEhDVBUCnZLBfY6LVRAHQlXHH"
+            <a href="https://nodestrich.com/signal"
                target="_blank"
                className="flex items-center space-x-3 p-3 bg-[#121212] rounded-lg hover:bg-[#383838] transition-colors">
               <img src="/icon_Signal.png" alt="Signal" className="w-8 h-8" />

@@ -37,7 +37,7 @@ Thank you for your interest in contributing to Nodestrich! This document provide
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/yourusername/nodestrich-web.git
+   git clone https://github.com/nodestrich/nodestrich-web.git
    cd nodestrich-web
    ```
 3. Install dependencies:
@@ -254,7 +254,7 @@ Add screenshots for UI changes.
 
 ### Resources
 - GitHub Discussions for questions
-- Community Telegram group
+- Community Signal group
 - Existing documentation and guides
 - Lightning Network specifications
 

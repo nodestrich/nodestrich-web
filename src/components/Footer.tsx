@@ -11,7 +11,7 @@ const Footer = () => {
           <p>
             We encourage members of our community to contribute their knowledge and experience on{' '}
             <a
-              href="https://github.com/yourusername/nodestrich-web"
+              href="https://github.com/nodestrich/nodestrich-web"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#f800c1] hover:underline"

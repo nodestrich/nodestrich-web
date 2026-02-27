@@ -14,7 +14,7 @@ export default async function Home() {
         <h2 className="text-2xl font-bold text-[#f800c1] mb-4">Welcome!</h2>
         <p className="text-gray-300 mb-6">
           Nodestrich is a community for node runners using Nostr. Users of all levels are welcome to join,
-          open channels, share knowledge, and build the Nostr circular economy. We are active on Nostr, as well as Telegram and Signal.
+          open channels, share knowledge, and build the Nostr circular economy. We are active on Nostr and Signal.
         </p>
         <p className="text-gray-300 mb-6">To learn more and join, click one of the icons below:</p>
 
@@ -37,15 +37,7 @@ export default async function Home() {
               <Image src="/icon_nostr.png" alt="Nostr" width={40} height={40} />
             </a>
             <a
-              href="https://t.me/+991twmY_VvFmNTQx"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-75 transition-opacity"
-            >
-              <Image src="/icon_Telegram.png" alt="Telegram" width={40} height={40} />
-            </a>
-            <a
-              href="https://signal.group/#CjQKIBbC7YbkMlJ-BHQftEAT5YmXF_OLnWnDGRdHavPeRR0qEhDVBUCnZLBfY6LVRAHQlXHH"
+              href="https://nodestrich.com/signal"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:opacity-75 transition-opacity"

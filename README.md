@@ -32,7 +32,7 @@ A modern, community-driven platform for Lightning Network node operators. Built 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-org/nodestrich-web.git
+git clone https://github.com/nodestrich/nodestrich-web.git
 cd nodestrich-web
 ```
 
@@ -154,7 +154,7 @@ Set these in your Vercel dashboard:
 
 - **Amboss**: [Community Page](https://amboss.space/community/6d41c0bd-6e39-40a2-a062-a809c2e8c2b5)
 - **Nostr**: [Profile](https://primal.net/p/npub1hxfkcs9gvtm49702rmwn2aeuvhkd2w6f0svm4sl84g8glhzx5u9srk5p6t)
-- **Telegram**: [Group Chat](https://t.me/+991twmY_VvFmNTQx)
+- **Signal**: [Group Chat](https://nodestrich.com/signal)
 
 ## License
 
