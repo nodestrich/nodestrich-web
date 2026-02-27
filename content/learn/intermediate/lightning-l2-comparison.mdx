@@ -1,0 +1,243 @@
+---
+title: 'Bitcoin L2 Comparison: Liquid, Spark, Ark, and Ecash'
+description: 'A technically accurate comparison of Liquid Network, Spark, Ark, and Ecash (Cashu/Fedimint) — what each is, how it works, and the real tradeoffs.'
+category: 'intermediate'
+tags: ['liquid', 'spark', 'ark', 'ecash', 'cashu', 'fedimint', 'l2', 'scaling']
+author: 'Nodestrich Community'
+publishedAt: '2026-02-27'
+updatedAt: '2026-02-27'
+---
+
+# Bitcoin L2 Comparison: Liquid, Spark, Ark, and Ecash
+
+The Bitcoin scaling landscape beyond Lightning has grown significantly. Liquid, Spark, Ark, and Ecash each take a different architectural approach to the same core problem: how do you move bitcoin quickly, cheaply, and privately without touching the base chain for every transaction?
+
+This article covers how each system works technically, what tradeoffs it makes, and where it fits in the ecosystem.
+
+---
+
+## Liquid Network
+
+### What It Is
+
+Liquid is a federated sidechain operated by the Liquid Network — a consortium of exchanges, brokers, and infrastructure companies (currently 65+ members, called functionaries). It has been in production since 2018 and is the oldest of the four systems covered here.
+
+Liquid uses a two-way peg: you lock BTC on the Bitcoin mainchain and receive L-BTC on the Liquid sidechain at a 1:1 ratio. L-BTC can be transacted on Liquid and redeemed back for BTC.
+
+### How It Works
+
+**The Federation:** Liquid relies on an 11-of-15 multisig held by functionaries running HSM (Hardware Security Module) hardware. Peg-ins and peg-outs require this quorum. The HSMs are designed to enforce federation rules and cannot sign arbitrary transactions, limiting insider risk — but the trust model still requires you to trust the federation not to collude or be coerced.
+
+**Confidential Transactions:** All Liquid transactions use Confidential Transactions (CT), a cryptographic technique that hides transaction amounts and asset types from public observers while still allowing validators to confirm no new coins are created. This is the strongest on-chain privacy feature of any production Bitcoin sidechain.
+
+**Block time and finality:** Liquid produces blocks every minute (vs. Bitcoin's ~10 minutes) and achieves strong finality after 2 blocks (~2 minutes). There is no probabilistic finality — the federation signs blocks, so a block signed by a quorum is final.
+
+**Assets:** Liquid supports native assets beyond L-BTC, including stablecoins (USDt on Liquid), security tokens, and other issued assets. This is a feature for exchanges that need to move multiple assets on the same rails.
+
+**Peg mechanics:**
+- **Peg-in:** Send BTC to a federation-controlled address. After 102 Bitcoin confirmations (~17 hours), L-BTC is credited on Liquid.
+- **Peg-out:** Burn L-BTC, request peg-out. Federation signs the Bitcoin withdrawal transaction within a few hours.
+
+The long peg-in confirmation requirement is a deliberate security measure to prevent reorg attacks on the peg.
+
+---
+
+## Spark
+
+### What It Is
+
+Spark is a Layer 2 protocol developed by Lightspark that uses **Statechains** combined with a **Spark Service Provider (SSP)** to enable off-chain bitcoin transfers. It launched mainnet in early 2025. Unlike Liquid, Spark does not use a sidechain — all funds ultimately settle on Bitcoin L1.
+
+### How It Works
+
+Spark builds on the **Statechain** concept: instead of transferring ownership of a UTXO by spending it on-chain, you transfer the *signing key* for that UTXO off-chain, with the cooperation of an operator.
+
+**Key components:**
+
+- **Leaves:** UTXOs locked in a 2-of-2 multisig between the user and the SSP operator. The operator holds one key; the user holds the other.
+- **Key transfer:** When Alice sends to Bob, Alice gives Bob her signing key share and the SSP rotates its own key to invalidate Alice's old share. Bob now co-controls the UTXO with the SSP using a fresh key combination.
+- **Pre-signed exit transactions:** At each state, a time-locked exit transaction is pre-signed so the user can unilaterally withdraw to L1 without SSP cooperation.
+- **Lightning interoperability:** Spark includes a Lightning gateway that allows converting Spark leaves to Lightning payments and vice versa, enabling interoperability with the broader Lightning Network.
+
+**Trust model:** You must trust the SSP not to collude with a prior owner to double-spend. The SSP signs an attestation that it has deleted old keys, but this is not cryptographically enforced — it is enforced by the SSP's reputation and legal agreements. If the SSP disappears, you can always exit to L1 via the pre-signed transactions.
+
+**No scripting limitations:** Because Spark leaves are standard Bitcoin UTXOs, they can carry any Bitcoin Script, including Taproot outputs.
+
+---
+
+## Ark
+
+### What It Is
+
+Ark is a protocol proposed by Burak Keceli in 2023 and now being developed by Ark Labs. It aims to give users a Lightning-like experience — instant sends, low fees — without requiring users to manage inbound liquidity or be online to receive payments.
+
+Ark is still in active development; production deployments exist but the protocol continues to evolve rapidly.
+
+### How It Works
+
+Ark introduces a new primitive: the **vTXO (virtual UTXO)**. vTXOs exist off-chain and are periodically anchored to the Bitcoin blockchain through a process called a **round**.
+
+**The Ark Service Provider (ASP):**
+An ASP is a always-on server that coordinates rounds. The ASP is not custodial in the traditional sense — users hold vTXOs with pre-signed exit paths — but the ASP must cooperate for normal operations.
+
+**Rounds:**
+Every ~5 seconds (configurable), the ASP publishes a round transaction on Bitcoin. This transaction:
+1. Spends a pool UTXO from the previous round
+2. Creates a new pool UTXO containing all the fresh vTXOs from this round's participants
+3. Includes connector outputs that allow participants to exit
+
+Each vTXO in the round is a leaf in a sparse Merkle tree committed to in the round transaction. Users receive a Merkle proof for their vTXO.
+
+**Receiving:** To receive an Ark payment, you do not need to be online. You simply give the sender your Ark address. Your vTXO will appear in the next round.
+
+**Sending:** Sending within Ark means swapping your old vTXO for a new vTXO in the next round. The ASP atomically exchanges vTXOs using a VTXO swap — the sender and receiver's vTXOs are both included in the same round, with an atomic link ensuring the sender's old vTXO is only consumed if the receiver's new vTXO is created.
+
+**Exit:** If the ASP stops operating, users can exit their vTXOs to L1 by broadcasting the pre-signed exit transactions. There is a timelock (e.g., 4 weeks) on vTXOs — after expiry they must be refreshed by participating in a new round, or they can be unilaterally claimed on-chain.
+
+**Lightning interoperability:** Ark can interoperate with Lightning through the ASP acting as a Lightning gateway, similar to how Spark works.
+
+---
+
+## Ecash (Cashu and Fedimint)
+
+Ecash is not a single protocol but a family of approaches that implement **blind signature schemes** to provide strong privacy. The two main implementations are **Cashu** and **Fedimint**.
+
+### Cashu
+
+**What it is:** Cashu is a simple, custodial ecash protocol with a single mint operator. It is explicitly custodial — you trust the mint completely. The tradeoff is near-perfect privacy.
+
+**How it works:**
+Cashu uses **Chaumian blind signatures** (invented by David Chaum in the 1980s). The flow:
+
+1. Alice deposits sats at the Cashu mint via Lightning invoice.
+2. Alice generates a random secret, blinds it, and sends the blinded value to the mint.
+3. The mint signs the blinded value without seeing the underlying secret, returns the blind signature.
+4. Alice unblinds the signature to produce an ecash token — a valid `(secret, signature)` pair.
+5. Alice sends the token to Bob (over any channel — even a plain text file).
+6. Bob redeems the token at the mint. The mint verifies the signature and marks the secret as spent, preventing double-spending.
+
+The mint never sees the link between step 2 (receiving the blinded token) and step 6 (seeing the redeemed token). This is cryptographic unlinkability — even a fully logging mint cannot connect deposits to withdrawals.
+
+**Denominations:** Cashu uses a UTXO-like denomination model (1, 2, 4, 8, ... sat tokens), allowing offline transactions and splitting/combining of tokens.
+
+**Trust:** Cashu is fully custodial. The mint operator can rug users. This is appropriate for small amounts and communities that trust their mint operator.
+
+### Fedimint
+
+**What it is:** Fedimint is a federated ecash protocol that distributes mint trust across a group of guardians using threshold signatures. It is designed for communities (families, villages, companies) that want the privacy benefits of ecash with reduced single-point-of-failure risk.
+
+**How it works:**
+Fedimint uses the same Chaumian blind signature scheme as Cashu, but replaces the single mint key with a **threshold multisig** (e.g., 2-of-3 or 3-of-5 guardians). Creating ecash tokens requires a quorum of guardians to cooperate.
+
+The federation holds the Bitcoin reserves in a multisig on-chain. Users interact with a Fedimint client that communicates with all guardians.
+
+**Modules:** Fedimint is modular. The Lightning module allows the federation to operate a Lightning gateway, so users can send and receive Lightning payments using their federated ecash balance.
+
+**Trust:** You trust the guardian quorum not to collude. Below the threshold, guardians cannot steal or deanonymize users. A 2-of-3 federation is harder to compromise than a single Cashu mint operator, but still requires trusting a known group of people.
+
+---
+
+## Comparison Table
+
+| Feature | Liquid | Spark | Ark | Cashu | Fedimint |
+|---|---|---|---|---|---|
+| **Custody model** | Non-custodial (federated peg) | Non-custodial (self-exit) | Non-custodial (self-exit) | Fully custodial | Federated custodial |
+| **Trust assumption** | 11-of-15 federation | SSP operator (reputational) | ASP operator (reputational) | Single mint | Guardian quorum |
+| **Privacy** | Confidential Transactions (amount/asset hidden) | UTXO graph visible | UTXO graph visible | Cryptographic unlinkability | Cryptographic unlinkability |
+| **Finality** | ~2 minutes (federation-signed) | Instant (off-chain) | ~5 seconds (per round) | Instant | Instant |
+| **Peg-in time** | ~17 hours (102 BTC blocks) | Minutes (via Lightning) | Minutes (via Lightning) | Seconds (via Lightning) | Seconds (via Lightning) |
+| **Offline receive** | Yes | No (Lightning-style) | Yes | Yes (bearer token) | Yes (bearer token) |
+| **Lightning interop** | Via submarine swaps | Native gateway | Native gateway | Native | Native |
+| **Liquidity management** | Not required | Channel-like | Not required | Not required | Not required |
+| **Maturity** | Production (2018) | Production (2025) | Early production (2025) | Production (2023) | Production (2024) |
+| **Best for** | Exchanges, institutions | Lightning power users | Low-liquidity users | Communities, privacy | Communities, resilience |
+| **On-chain footprint** | 1 tx per peg-in/out | 1 tx per exit | 1 tx per round (shared) | 1 tx per redeem | 1 tx per redeem |
+| **Self-sovereign exit** | Yes (federation permitting) | Yes (timelock) | Yes (timelock) | No | No |
+
+---
+
+## Tradeoffs Summary
+
+### Liquid
+
+**Pros:**
+- Longest production track record
+- Confidential Transactions provide real on-chain privacy
+- Supports multiple assets on the same rails
+- Fast finality for institutional use cases
+
+**Cons:**
+- Long peg-in time (~17 hours) creates friction
+- Federation is a trust and regulatory attack surface
+- Requires running a Liquid node or trusting an explorer
+- Small ecosystem compared to Lightning
+
+### Spark
+
+**Pros:**
+- No inbound liquidity management
+- Native Lightning interoperability
+- Strong self-exit guarantees via pre-signed transactions
+- Uses standard Bitcoin UTXOs (no new scripting)
+
+**Cons:**
+- Trust in SSP reputationally (not cryptographically enforced)
+- Key transfer model is novel — long-term security assumptions less tested
+- Centralized SSP creates a potential single point of failure
+- Protocol still maturing
+
+### Ark
+
+**Pros:**
+- Receive without being online (unlike Lightning)
+- No liquidity management required
+- Strong cryptographic self-exit path
+- Efficient: many users share one on-chain round transaction
+
+**Cons:**
+- vTXOs expire and must be refreshed (adds complexity)
+- ASP must be online and cooperative for normal operation
+- Protocol still evolving; breaking changes possible
+- Round-based model introduces latency (5-second rounds)
+
+### Cashu
+
+**Pros:**
+- Strongest privacy of any option (cryptographic unlinkability)
+- Extremely simple to deploy and use
+- Works over any transport (even QR codes, NFC, text)
+- Instant transactions
+
+**Cons:**
+- Fully custodial — mint operator can steal or disappear
+- No self-exit path; funds are lost if the mint goes offline
+- Not suitable for large balances
+- Trust is entirely social, not cryptographic
+
+### Fedimint
+
+**Pros:**
+- Strong privacy (same as Cashu)
+- Distributed trust across a guardian quorum
+- Modular design supports Lightning, on-chain, and future modules
+- Designed for community trust models
+
+**Cons:**
+- Still requires trusting a known group of guardians
+- More complex to set up than Cashu
+- Federation coordination adds operational overhead
+- No self-sovereign exit — if all guardians disappear, funds are at risk
+
+---
+
+## Which One Should You Use?
+
+There is no universal answer — the right tool depends on your threat model and use case:
+
+- **You need to move value between exchanges with strong privacy:** Liquid is the most mature option.
+- **You want Lightning-like speed without managing channels:** Spark or Ark both remove the inbound liquidity problem; Spark is more production-ready today, Ark is more decentralized in design.
+- **You want maximum privacy for small amounts in a trusted community:** Cashu is the simplest and most private option.
+- **You want Cashu-style privacy with reduced custodial risk:** Fedimint is the right architecture — find or start a federation with guardians you trust.
+- **You run a Lightning node and want interoperability:** All four systems have Lightning gateways, so your node can be a liquidity bridge for any of them.
+
+For Lightning node runners specifically, the most immediately relevant question is whether to operate a gateway for Ark or Fedimint — both need Lightning-connected operators to serve as on/off ramps. This is a revenue opportunity similar to routing, with different risk profiles.

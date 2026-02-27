@@ -1,0 +1,186 @@
+---
+title: 'Nostr Zaps: Lightning-Native Payments for Social Media'
+description: 'How Nostr zaps work under the hood, why they matter for the Lightning circular economy, and how node runners can set up their node to receive them.'
+category: 'intermediate'
+tags: ['nostr', 'zaps', 'nip-57', 'payments', 'circular-economy']
+author: 'Nodestrich Community'
+publishedAt: '2026-02-27'
+updatedAt: '2026-02-27'
+---
+
+# Nostr Zaps: Lightning-Native Payments for Social Media
+
+Nostr zaps are the first mainstream use case where Lightning payments are the *default* interaction — not a bolt-on feature. For node runners, they represent real routing volume, a live audience for your node's capacity, and a glimpse of what a genuinely circular Bitcoin economy looks like.
+
+## What Is a Zap?
+
+A zap is a Lightning payment sent from one Nostr user to another, with the payment cryptographically linked to a specific Nostr note or profile. The sender attaches a comment, the recipient's wallet acknowledges receipt, and a public receipt event is broadcast back to Nostr relays so everyone can see the payment happened.
+
+The result: tipping content on a social network that settles instantly in bitcoin, without any custodian processing the transaction — unless the recipient chooses a custodial wallet.
+
+Zaps are defined by **NIP-57** (Nostr Implementation Possibility 57). Understanding the flow explains why they work the way they do.
+
+## The NIP-57 Zap Flow
+
+There are five actors in every zap:
+
+| Actor | Role |
+|---|---|
+| Sender's client | Constructs the zap request event and initiates payment |
+| Sender's wallet | Pays the Lightning invoice |
+| Recipient's Lightning address / LNURL server | Issues the invoice |
+| Recipient's wallet or node | Settles the payment |
+| Nostr relays | Broadcast the zap receipt event publicly |
+
+### Step 1 — Sender Constructs a Zap Request (Kind 9734)
+
+The sender's Nostr client creates a **kind 9734** event containing:
+
+- `p` tag: the recipient's public key
+- `e` tag (optional): the note being zapped
+- `relays` tag: which relays the receipt should be published to
+- `amount` tag: the intended amount in millisatoshis
+- `content`: an optional comment
+
+This event is **signed by the sender's private key** but is *not* published to relays yet. It is URL-encoded and passed to the recipient's LNURL server as a query parameter.
+
+```
+GET https://wallet.example.com/.well-known/lnurlp/alice
+  ?amount=21000
+  &nostr=<url-encoded kind-9734 event>
+  &comment=Great+post
+```
+
+### Step 2 — LNURL Server Issues an Invoice
+
+The recipient's LNURL-pay server (often their Lightning wallet or node) validates the zap request, then generates a standard Lightning invoice. Crucially, the invoice's **description hash** (`h` field in the invoice) is set to the SHA-256 hash of the serialized kind 9734 event. This links the invoice to the zap request in a way anyone can verify.
+
+The server returns the invoice to the sender's client.
+
+### Step 3 — Sender Pays the Invoice
+
+The sender's wallet pays the invoice over the Lightning Network like any other payment. Routing nodes (including yours) may forward this payment — they see it as ordinary HTLC traffic.
+
+### Step 4 — Server Publishes the Zap Receipt (Kind 9735)
+
+After the payment settles, the recipient's LNURL server creates a **kind 9735** event containing:
+
+- The original kind 9734 zap request embedded in the `description` tag
+- The payment preimage in the `bolt11` tag (proving settlement)
+- A `p` tag for the recipient and an optional `e` tag for the note
+
+This receipt is signed by the **server's key** (not the recipient's personal Nostr key) and published to the relays specified in the zap request.
+
+### Step 5 — Clients Display the Zap
+
+Nostr clients query relays for kind 9735 events referencing a note or profile. They verify:
+
+1. The receipt's `description` field hashes to the invoice's `h` field
+2. The zap request inside is validly signed by the sender's key
+3. The receipt is signed by the key advertised in the recipient's LNURL metadata
+
+Only zaps that pass these checks are counted and displayed. This is what prevents fake zap spam.
+
+## Why Zaps Matter for the Lightning Circular Economy
+
+Most Lightning volume today is merchants receiving payments from end-users — a hub-and-spoke flow that drains inbound liquidity toward a few large nodes. Zaps introduce a different pattern:
+
+- **Peer-to-peer micropayments** flowing between individuals, not just merchant-to-consumer
+- **High frequency, small amounts** — hundreds of 21-sat zaps create more routing opportunities than one large payment
+- **Geographic and social diversity** — payments follow social graphs, not just commercial relationships
+
+For routing node operators, Nostr clients represent a growing pool of users whose wallets need a path to reach each other. Nodes with good connectivity to popular Lightning address providers (Alby, Wallet of Satoshi, Strike, Primal Wallet) will see this traffic.
+
+### Circular Economy in Practice
+
+When a Bitcoin pleb zaps a creator who then pays their VPS provider in sats, who pays their coffee shop in sats, the circular economy is working. Each Lightning payment that stays off-chain is a payment that doesn't require a round-trip to the base chain. Your node earns fees on every hop.
+
+## Setting Up Your Node to Receive Zaps
+
+To receive zaps directly to your own node, you need:
+
+1. A Lightning address pointing to your node
+2. A LNURL-pay compatible server
+
+### Option A: LNbits + LNbits LNURL Extension
+
+LNbits is the most common self-hosted solution. It runs alongside your node and provides a web UI, Lightning addresses, and a LNURL-pay endpoint.
+
+```bash
+# If running LNbits connected to LND
+# Install the LNURLp extension from the Extensions marketplace
+# Create a pay link -> your lightning address becomes:
+# yourname@your-lnbits-domain.com
+```
+
+Your Nostr client needs to know this address. Set it in your Nostr profile's `lud16` field:
+
+```json
+{
+  "lud16": "yourname@your-lnbits-domain.com"
+}
+```
+
+### Option B: Alby Hub (Self-Hosted)
+
+Alby Hub connects directly to LND, CLN, or LDK and exposes a Lightning address at `yourname@getalby.com` (or your own domain with a self-hosted hub). This is the lowest-friction path for LND and CLN users.
+
+### Option C: CLN with the clnrest Plugin
+
+If you run Core Lightning, `clnrest` exposes REST endpoints including LNURL-pay. Combine it with a simple reverse proxy:
+
+```toml
+# ~/.lightning/config
+plugin=/path/to/clnrest
+clnrest-port=3010
+clnrest-protocol=https
+```
+
+A lightweight LNURL server like `lnme` or `satdress` can sit in front of this to handle the Lightning address resolution.
+
+### Option D: LND with LNC / Lightning Terminal
+
+Lightning Labs' Terminal provides a hosted Lightning address that routes to your LND node via LNC (Lightning Node Connect). No self-hosted server required, but you trust Lightning Labs for the address layer.
+
+## Verifying Your Setup
+
+After configuring your Lightning address, test it:
+
+```bash
+# Fetch your LNURL metadata
+curl https://your-domain.com/.well-known/lnurlp/yourname | jq .
+
+# Check for the nostrPubkey field — required for NIP-57
+# The server must advertise its Nostr signing key
+{
+  "tag": "payRequest",
+  "callback": "https://your-domain.com/lnurlp/yourname/callback",
+  "minSendable": 1000,
+  "maxSendable": 100000000,
+  "metadata": "...",
+  "allowsNostr": true,
+  "nostrPubkey": "npub1..."
+}
+```
+
+`allowsNostr: true` and a valid `nostrPubkey` are required for zap receipts to be generated. Without them, payments will go through but won't produce a verifiable kind 9735 receipt — clients won't show the zap.
+
+## Practical Tips for Node Runners
+
+**Keep your node online.** Zaps are often impulsive — someone reads a post and zaps immediately. If your node is down or a channel is offline, the payment fails and the user moves on. Uptime matters more for zaps than for scheduled merchant payments.
+
+**Open channels to popular wallet providers.** Most zap senders use custodial or semi-custodial wallets: Wallet of Satoshi, Primal, Mutiny (now mostly defunct), Alby. A direct or one-hop channel to these providers dramatically increases the chance your node is on the payment path.
+
+**Use a domain you control for your Lightning address.** `yourname@yourdomain.com` looks more professional, is portable across wallet backends, and lets you migrate without changing your Nostr profile. Services like `satdress` let you forward addresses from your domain to any backend.
+
+**Monitor your inbound liquidity.** Zap traffic is mostly inbound to content creators. If you are a creator and run your own node, you will drain outbound liquidity fast. Budget for loop-outs or have a circular rebalancing strategy ready.
+
+**Set your Nostr profile's `nip05` and `lud16` fields.** `nip05` is your verified Nostr identity (`yourname@yourdomain.com`). `lud16` is your Lightning address. Many clients show a verified checkmark when both point to the same domain, building trust with potential zappers.
+
+**Consider fee implications.** A 21-sat zap routed through two hops might cost the sender 1 sat in fees. Keep your base fee low (0–1 sat) and proportional fee reasonable (≤500 ppm) for this kind of micropayment traffic. Greedy fee settings will route zaps around you.
+
+## The Bigger Picture
+
+Nostr zaps are not just a feature — they are a proof of concept. They demonstrate that Lightning can be the payment layer for an entire social platform, handling millions of micropayments without a payment processor, a bank, or a terms-of-service that can be revoked. Every zap is a settlement on the Bitcoin network, eventually.
+
+For node runners, this is the use case that vindicates routing infrastructure. The more people zap, the more liquidity is needed across the network, and the more routing fee revenue flows to operators who position themselves well.
