@@ -359,7 +359,8 @@ function render_inline_markdown(string $text): string
     $html = preg_replace_callback('/\[([^\]]+)\]\(([^)]+)\)/', static function (array $match): string {
         $label = $match[1];
         $href = $match[2];
-        return '<a href="' . e($href) . '">' . $label . '</a>';
+        $attrs = preg_match('#^https?://#i', $href) ? ' target="_blank" rel="noopener noreferrer"' : '';
+        return '<a href="' . e($href) . '"' . $attrs . '>' . $label . '</a>';
     }, $html) ?? $html;
     $html = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $html) ?? $html;
     $html = preg_replace('/(?<!\*)\*([^*]+)\*(?!\*)/', '<em>$1</em>', $html) ?? $html;
