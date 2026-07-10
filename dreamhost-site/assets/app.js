@@ -33,9 +33,18 @@
     document.querySelectorAll('[data-search-box]').forEach((box) => {
       const input = box.querySelector('[data-search-input]');
       const results = box.querySelector('[data-search-results]');
+      const toggle = box.querySelector('[data-search-toggle]');
       if (!input || !results) return;
 
       let timer = null;
+
+      if (toggle) {
+        toggle.addEventListener('click', () => {
+          box.classList.add('is-expanded');
+          toggle.setAttribute('aria-expanded', 'true');
+          input.focus();
+        });
+      }
 
       input.addEventListener('input', () => {
         clearTimeout(timer);
@@ -63,7 +72,11 @@
       });
 
       document.addEventListener('mousedown', (event) => {
-        if (!box.contains(event.target)) results.hidden = true;
+        if (!box.contains(event.target)) {
+          results.hidden = true;
+          box.classList.remove('is-expanded');
+          if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        }
       });
     });
   }

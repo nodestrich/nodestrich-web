@@ -99,7 +99,7 @@ function render_search_box(): string
 <div class="search-box" data-search-box>
   <label class="sr-only" for="site-search-<?= $searchId ?>">Search knowledge base</label>
   <input id="site-search-<?= $searchId ?>" type="search" placeholder="Search knowledge base..." autocomplete="off" data-search-input>
-  <span class="search-icon" aria-hidden="true"></span>
+  <button type="button" class="search-icon" data-search-toggle aria-label="Toggle search" aria-expanded="false"></button>
   <div class="search-results" data-search-results hidden></div>
 </div>
 <?php
