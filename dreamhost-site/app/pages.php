@@ -113,6 +113,13 @@ function render_home_page(): string
 
 function render_member_directory(array $members): string
 {
+    $members = array_values(array_filter($members, static function (array $member): bool {
+        $capacity = (int) ($member['capacity_sats'] ?? 0);
+        $channels = (int) ($member['channels'] ?? 0);
+
+        return $capacity > 0 && $channels > 0;
+    }));
+
     ob_start();
     ?>
 <section class="member-directory">
