@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.dreamhost-password
+config.local.php
+dreamhost-site/config.local.php
 
 # vercel
 .vercel
@@ -43,3 +46,4 @@ next-env.d.ts
 # Next.js
 .next/
 out/
+.env*.local

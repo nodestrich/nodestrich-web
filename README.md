@@ -137,13 +137,18 @@ We welcome contributions from the Lightning Network community!
 
 ## Deployment
 
-The site is automatically deployed to Vercel when changes are pushed to the main branch.
+The current live `nodestrich.com` site is hosted on DreamHost shared Apache/PHP hosting. The deployable production source is the PHP site in `dreamhost-site/`.
+
+Use the rsync workflow in `AGENTS.md` and `scripts/dreamhost-rsync.sh` to update DreamHost. Run `bash scripts/dreamhost-rsync.sh push` first for a dry-run, then `bash scripts/dreamhost-rsync.sh push --apply` to deploy after reviewing the changes. For the first replacement of the old site, back up the old docroot and use a reviewed `--delete` deploy so stale Apache files do not shadow the PHP router.
+
+The Next.js app remains in this repository for reference, but Vercel is not the current live production target.
 
 ### Environment Variables
 
-Set these in your Vercel dashboard:
+Set these in `dreamhost-site/config.local.php` on DreamHost or as server environment variables:
 
 - `AMBOSS_API_KEY` - Your Amboss API key
+- `SIGNAL_INVITE_URL` - Optional Signal invite redirect for `/signal`
 
 ## API Endpoints
 
