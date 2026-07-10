@@ -87,6 +87,11 @@ function render_home_page(): string
         <span>Members</span>
       </article>
       <article class="stat-card">
+        <?php $activeCount = count(filter_active_members($members)); ?>
+        <strong class="js-counter" data-target="<?= e((string) $activeCount) ?>"><?= e((string) $activeCount) ?></strong>
+        <span>Active Nodes</span>
+      </article>
+      <article class="stat-card">
         <strong class="js-counter" data-target="<?= e((string) $community['community_stats']['total_channels']) ?>"><?= e((string) $community['community_stats']['total_channels']) ?></strong>
         <span>Channels</span>
       </article>
@@ -111,14 +116,19 @@ function render_home_page(): string
     return (string) ob_get_clean();
 }
 
-function render_member_directory(array $members): string
+function filter_active_members(array $members): array
 {
-    $members = array_values(array_filter($members, static function (array $member): bool {
+    return array_values(array_filter($members, static function (array $member): bool {
         $capacity = (int) ($member['capacity_sats'] ?? 0);
         $channels = (int) ($member['channels'] ?? 0);
 
         return $capacity > 0 && $channels > 0;
     }));
+}
+
+function render_member_directory(array $members): string
+{
+    $members = filter_active_members($members);
 
     ob_start();
     ?>
