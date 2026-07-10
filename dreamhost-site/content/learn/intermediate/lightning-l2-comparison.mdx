@@ -2,10 +2,10 @@
 title: 'Bitcoin Layer 2 Comparison: Lightning, Liquid, Spark, Ark, and Ecash'
 description: 'A comparison of Bitcoin Layer 2 protocols — Lightning Network, Liquid, Spark, Ark, and Ecash — how each works, the tradeoffs, and how they interoperate.'
 category: 'intermediate'
-tags: ['lightning', 'liquid', 'spark', 'ark', 'ecash', 'cashu', 'fedimint', 'l2', 'scaling', 'boltz']
+tags: ['lightning', 'liquid', 'spark', 'ark', 'ecash', 'cashu', 'fedimint', 'l2', 'scaling', 'boltz', 'stablecoins', 'taproot-assets']
 author: 'Nodestrich Community'
 publishedAt: '2026-02-27'
-updatedAt: '2026-02-27'
+updatedAt: '2026-07-10'
 ---
 
 # Bitcoin Layer 2 Comparison
@@ -47,6 +47,10 @@ Lightning is not just one of several L2 options — it is the interoperability l
 - Must be online to receive payments
 - Channel opens/closes require on-chain transactions (and fees)
 - Running a routing node requires technical knowledge and ongoing maintenance
+
+### Taproot Assets: Stablecoins Arrive on Lightning
+
+Lightning has historically been Bitcoin-only, unlike Liquid, which has long supported stablecoins (see below). That changed in March 2026, when Tether confirmed that USDT is live on Bitcoin and Lightning through Lightning Labs' Taproot Assets protocol, following a roughly fourteen-month integration effort. Taproot Assets issues other assets on top of Bitcoin using Taproot outputs and routes their transfers through existing Lightning channels — so a Lightning node that upgrades to support Taproot Assets can carry stablecoin payments over the same infrastructure it already uses for sats, without a separate sidechain or federation. For node runners, this means channel liquidity and routing decisions may increasingly need to account for asset-aware payments, not just BTC.
 
 ---
 
@@ -97,6 +101,16 @@ Spark builds on the **Statechain** concept: instead of transferring ownership of
 
 **No scripting limitations:** Because Spark leaves are standard Bitcoin UTXOs, they can carry any Bitcoin Script, including Taproot outputs.
 
+### Unilateral Exit in Practice
+
+The pre-signed exit transactions are the whole basis for calling Spark self-custodial, so it's worth knowing what invoking them actually looks like. A July 2026 case study, published in Blink's [spark-unilateral-exit GitHub repository](https://github.com/blinkbitcoin/spark-unilateral-exit/blob/main/docs/mainnet-exit-case-study.md), walked a real mainnet wallet holding 100,000 sats across 22 leaves through a full unilateral exit, with every transaction publicly verifiable on-chain.
+
+The headline numbers: exiting required 253 separate on-chain transaction packages — one confirmation per level of each leaf's exit chain, since exit transactions use v3 (TRUC) transaction relay rules that cap a chain to one unconfirmed parent and child at a time, so each level must confirm before the next can broadcast. Exit transactions are pre-signed at zero fee and rely on CPFP fee-bumping from a separate funding UTXO; bumping every leaf in this wallet would have cost roughly 78,500 sats — about 79% of the wallet's balance — because most of the 22 leaves were small change from ordinary wallet activity ("dust") not worth the fee to exit individually.
+
+Triaging by economics rather than exiting everything changed the outcome substantially: of the 22 leaves, only 4 (holding 90% of the wallet's value) were worth exiting at all. Doing so cost about 8,400 sats in fees, and after the mandatory ~2-week CSV timelock on the refund transactions, roughly 89,700 of the original 100,000 sats — about 90% — reached the destination address.
+
+The people who ran this exit summarized it well: unilateral exit is "a fire escape, not a door." It works, and the funds are genuinely recoverable without operator cooperation, but it is deliberately slow — weeks, not minutes — and can be expensive if you wait until you need it rather than keeping leaves consolidated and exit tooling ready beforehand.
+
 ---
 
 ## Ark
@@ -105,7 +119,7 @@ Spark builds on the **Statechain** concept: instead of transferring ownership of
 
 Ark is a protocol proposed by Burak Keceli in 2023 and now being developed by Ark Labs. It aims to give users a Lightning-like experience — instant sends, low fees — without requiring users to manage inbound liquidity or be online to receive payments.
 
-Ark is still in active development; production deployments exist but the protocol continues to evolve rapidly.
+Ark is still in active development, and the ecosystem has grown quickly through 2026: Bark, an alternative client implementation, is now live on Bitcoin mainnet alongside Arkade and hArk (a hash-lock-based variant), and the V-PACK standard for stateless vTXO verification has been published. Second (second.tech) is a production wallet built on Ark. The protocol continues to evolve rapidly, and breaking changes remain possible.
 
 ### How It Works
 
@@ -179,7 +193,7 @@ The federation holds the Bitcoin reserves in a multisig on-chain. Users interact
 
 **Spark** — Non-custodial (self-exit), SSP trust (reputational). Instant finality. Lightning gateway built in. Must be online to receive. Production since 2025. Best for: Lightning power users.
 
-**Ark** — Non-custodial (self-exit), ASP trust (reputational). ~5 second rounds. Can receive offline. No liquidity management. Early production (2025). Best for: users who don't want to manage channels.
+**Ark** — Non-custodial (self-exit), ASP trust (reputational). ~5 second rounds. Can receive offline. No liquidity management. Production (2025–2026), multiple implementations (Bark, Arkade). Best for: users who don't want to manage channels.
 
 **Cashu** — Fully custodial, single mint trust. Instant finality. Cryptographic unlinkability (strongest privacy). Bearer tokens work offline. Production since 2023. Best for: communities, small amounts, privacy.
 
@@ -231,6 +245,7 @@ The federation holds the Bitcoin reserves in a multisig on-chain. Users interact
 - Key transfer model is novel — long-term security assumptions less tested
 - Centralized SSP creates a potential single point of failure
 - Protocol still maturing
+- Unilateral exit is real but slow and can be costly if leaves aren't consolidated (see "Unilateral Exit in Practice," above)
 
 ### Ark
 

@@ -2,10 +2,10 @@
 title: 'Nostr Zaps: Lightning-Native Payments for Social Media'
 description: 'How Nostr zaps work under the hood, why they matter for the Lightning circular economy, and how node runners can set up their node to receive them.'
 category: 'intermediate'
-tags: ['nostr', 'zaps', 'nip-57', 'payments', 'circular-economy']
+tags: ['nostr', 'zaps', 'nip-57', 'payments', 'circular-economy', 'clink']
 author: 'Nodestrich Community'
 publishedAt: '2026-02-27'
-updatedAt: '2026-02-27'
+updatedAt: '2026-07-10'
 ---
 
 # Nostr Zaps: Lightning-Native Payments for Social Media
@@ -80,6 +80,12 @@ Nostr clients query relays for kind 9735 events referencing a note or profile. T
 3. The receipt is signed by the key advertised in the recipient's LNURL metadata
 
 Only zaps that pass these checks are counted and displayed. This is what prevents fake zap spam.
+
+## Emerging: CLINK
+
+The zap flow above depends on LNURL — a web-based callback mechanism that requires the recipient to run or trust an HTTPS server. **CLINK** ("Common Lightning Interface for Nostr Keys"), built by Shocknet, proposes doing the same kind of interaction — offers, invoices, balance checks — entirely over Nostr's own relay, identity, and encryption layer instead, without a web server or pre-shared secrets. It's positioned as a Nostr-native alternative to LNURL, Bolt12, and NWC (Nostr Wallet Connect) for wallet-to-app and app-to-node interactions.
+
+CLINK is early: the spec and three interactive demos (Offers, Debits, Manage) are public and open-source, but it has not yet seen the kind of wallet adoption that makes LNURL the default today. Worth watching, not yet worth building on for anything you need to work reliably — NIP-57's LNURL-based flow remains the production path for zaps.
 
 ## Why Zaps Matter for the Lightning Circular Economy
 

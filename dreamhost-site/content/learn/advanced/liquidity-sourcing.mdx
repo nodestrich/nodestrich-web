@@ -1,0 +1,91 @@
+---
+title: 'Sourcing Lightning Liquidity: Magma, Pool, and LSPs'
+description: 'A practical guide to acquiring inbound Lightning channel liquidity — how Amboss Magma, Lightning Pool, and LSPs actually work, what they cost, and how channel splicing changes the picture.'
+category: 'advanced'
+tags: ['liquidity', 'magma', 'channels', 'management', 'lightning', 'amboss']
+author: 'Nodestrich Community'
+publishedAt: '2026-07-10'
+updatedAt: '2026-07-10'
+---
+
+# Sourcing Lightning Liquidity: Magma, Pool, and LSPs
+
+[Channel Management Best Practices](/learn/intermediate/channel-management) covers the basics of opening, monitoring, and rebalancing channels. This guide goes one level deeper: once you know you need more liquidity, where do you actually get it, and what does it cost?
+
+Acquiring liquidity is a three-way tradeoff. You can generally optimize for speed, cost, or capacity — but not all three at once:
+
+- **Fast:** buy it now from an LSP or a marketplace listing. Costs money.
+- **Cheap:** rebalance liquidity you already have access to somewhere in the network. Slow, and limited by your existing channel topology — you can't rebalance liquidity that doesn't exist anywhere reachable.
+- **Large capacity:** open new channels with real capital. Requires an on-chain transaction and locked-up bitcoin.
+
+The rest of this guide covers the tools that address the "fast" and "large capacity" ends of that tradeoff — Amboss Magma, Lightning Pool, and LSPs — plus channel splicing, a 2026 development that changes how much resizing matters in the first place.
+
+---
+
+## Amboss Magma
+
+### What It Is
+
+Magma is Amboss's liquidity marketplace: a place for Lightning node operators to buy and sell channels directly, with no restriction on implementation — LND, Core Lightning, and Eclair nodes all participate. If you need inbound liquidity to receive payments, you buy a channel opened to you. If you have spare capital, you sell channels and earn yield on bitcoin you'd otherwise be holding idle.
+
+### How It Works
+
+**Listings.** Sellers create offers specifying the minimum and maximum channel size they're willing to open and the price they charge. Buyers browse listings and purchase a channel of the size they need from whichever seller fits their budget and desired counterparty.
+
+**HODL invoices as the trust mechanism.** Magma never takes custody of funds. Instead, it uses HODL invoices — a Lightning invoice the seller can only settle if they actually open the channel within a short window. The buyer pays the HODL invoice, which holds the payment in limbo; the seller then broadcasts the channel-open transaction. Only once it reaches three on-chain confirmations does the invoice actually settle and the seller get paid. If the seller doesn't follow through, the invoice expires and the buyer's payment is simply returned. Neither side has to trust the other going in — the incentive is enforced by the invoice mechanics themselves.
+
+**Reputation.** Because sellers commit to opening a channel before final confirmation, Magma tracks a reputation score across three categories: **Reliability** (do they follow through), **Speed** (how fast they open after payment), and **Track Record** (history of completed orders). Repeated abuse of the system can result in expulsion from the marketplace.
+
+**Fees.** Magma charges a percentage of the transaction: 1% for non-subscribers, dropping to 0.75% at Amboss's "Node Runner" subscription tier, 0.25% at "Builder," and 0% at higher tiers.
+
+### Why It Matters for Sourcing Channels
+
+From the buyer's side, Magma is the most direct way to acquire exactly the channel size and counterparty you want, priced by a real market of sellers rather than a single provider's rate card. You're not waiting on organic channel growth or hoping a well-connected peer opens to you — you're paying for it, on your own timeline.
+
+From the seller's side, Magma turns idle bitcoin into a yield-bearing asset. Capital locked in a channel is still bitcoin you control — a channel is non-custodial by construction, the seller remains a co-signer on the funds — and it earns routing fees on top of whatever the buyer paid to have the channel opened in the first place. This two-sided market is a large part of why liquidity marketplaces exist at all: without one, there's no efficient way for someone with spare capacity to find someone who actually needs it.
+
+---
+
+## Lightning Pool
+
+Lightning Pool, from Lightning Labs, is built around the same underlying idea as Magma — liquidity buyers and sellers finding each other — but structured differently. Instead of individual listings a buyer browses and accepts, Pool runs periodic **batched auctions**: sellers submit ask orders (capital they'll commit, at a minimum yield), buyers submit bid orders (capacity they need, at a maximum price), and an auctioneer clears the market at a single price each round, matching as many compatible orders as possible.
+
+The batched-auction structure means price discovery happens across all participants at once, rather than buyer-versus-single-seller negotiation. It's a reasonable alternative to Magma when you'd rather take a market-clearing price than compare individual listings, and it's tightly integrated with Lightning Terminal for operators already running LND.
+
+---
+
+## Liquidity Service Providers (LSPs)
+
+LSPs take a different shape entirely: instead of a marketplace, they're a service you subscribe to or draw from on demand. Many wallets — especially mobile and nodeless wallets — now ship with an LSP relationship built in, so a new user gets usable inbound liquidity automatically on their first receive, without ever knowing a channel was opened on their behalf.
+
+For a node operator rather than an end-user wallet, LSPs are most useful as a way to guarantee inbound capacity for a specific need — a merchant who has to reliably receive payments, for instance — via a subscription or a one-time on-demand purchase, rather than hoping the network organically routes liquidity your way.
+
+---
+
+## Channel Splicing: A New Alternative
+
+Historically, resizing a channel meant closing it and reopening a new one — two on-chain transactions, and a window with no channel at all in between. In 2026, Core Lightning merged splicing into the BOLTs specification and enabled it by default: an operator can now add or remove funds from an existing channel on the fly, without closing it.
+
+Splicing doesn't replace Magma, Pool, or LSPs — it doesn't get you a *new* channel or a new counterparty — but it removes a lot of the friction around resizing what you already have. If the only problem is that an existing, well-connected channel is undersized, splicing more capital into it is now simpler than tearing it down and hoping to reopen with the same peer on the same terms.
+
+---
+
+## A Practical Walkthrough
+
+Say you're standing up a new routing node with healthy outbound liquidity — you funded the channel opens yourself — but zero inbound, so nobody can pay you yet. Three reasonable paths:
+
+1. **Buy a Magma listing** sized to your expected receive volume, from a seller with good reputation and solid connectivity. Pay the marketplace fee, wait for the channel to open and confirm, and you have guaranteed inbound immediately.
+2. **Bid in a Lightning Pool auction** for the same capacity, if you'd rather take a cleared market price than compare individual sellers.
+3. **Do nothing and rebalance in** as you route payments and slowly accumulate inbound organically — free, but slow, and it only works once you already have *some* outbound liquidity moving through well-connected peers.
+
+Most operators end up mixing approaches over time: a Magma or Pool purchase to bootstrap a working channel set quickly, day-to-day circular rebalancing to maintain it, and splicing whenever a specific channel just needs to grow rather than be replaced.
+
+## Choosing the Right Approach
+
+- **You know exactly what channel you need and from whom:** Magma — pick your counterparty and size directly, pay a marketplace fee.
+- **You want an auction-cleared price and you're already in the LND/Lightning Terminal ecosystem:** Lightning Pool.
+- **You're a merchant or wallet that needs guaranteed inbound without running the marketplace process yourself:** an LSP subscription.
+- **Your existing channels are the right shape, just the wrong size:** splice, rather than close and reopen.
+- **You have time but not capital:** circular rebalancing (see [Channel Management Best Practices](/learn/intermediate/channel-management)) moves liquidity for free — the tradeoff is that it only works if the liquidity you need already exists somewhere reachable in the network.
+
+None of these are mutually exclusive. A typical routing node uses several of them at different points: an LSP or marketplace purchase to bootstrap early liquidity, circular rebalancing for day-to-day maintenance, and splicing when a specific channel just needs to grow.
