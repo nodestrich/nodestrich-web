@@ -73,6 +73,7 @@ fi
 DREAMHOST_LOCAL_PATH="${DREAMHOST_LOCAL_PATH:-dreamhost-site/}"
 DREAMHOST_RSYNC_SSH="${DREAMHOST_RSYNC_SSH:-ssh}"
 EXCLUDES_FILE="${DREAMHOST_EXCLUDES_FILE:-$ROOT_DIR/deploy/dreamhost.rsync-excludes}"
+DREAMHOST_PASSWORD_FILE="${DREAMHOST_PASSWORD_FILE:-}"
 
 if [[ "$DREAMHOST_LOCAL_PATH" = /* ]]; then
   LOCAL_PATH="$DREAMHOST_LOCAL_PATH"
@@ -131,4 +132,42 @@ else
   echo "Dry-run rsync $ACTION against DreamHost. Add --apply to make changes."
 fi
 
-rsync "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
+if [[ -n "$DREAMHOST_PASSWORD_FILE" ]]; then
+  if [[ "$DREAMHOST_PASSWORD_FILE" != /* ]]; then
+    DREAMHOST_PASSWORD_FILE="$ROOT_DIR/$DREAMHOST_PASSWORD_FILE"
+  fi
+
+  if [[ ! -f "$DREAMHOST_PASSWORD_FILE" ]]; then
+    echo "Password file does not exist: $DREAMHOST_PASSWORD_FILE" >&2
+    exit 2
+  fi
+
+  if ! command -v expect >/dev/null 2>&1; then
+    echo "DREAMHOST_PASSWORD_FILE requires expect, but expect is not installed." >&2
+    exit 2
+  fi
+
+  export DREAMHOST_PASSWORD
+  DREAMHOST_PASSWORD="$(tr -d '\r\n' < "$DREAMHOST_PASSWORD_FILE")"
+  expect -c '
+set timeout -1
+set password $env(DREAMHOST_PASSWORD)
+spawn rsync {*}$argv
+expect {
+  -re "(?i)are you sure you want to continue connecting" {
+    send "yes\r"
+    exp_continue
+  }
+  -re "(?i)password:" {
+    send "$password\r"
+    exp_continue
+  }
+  eof {
+    catch wait result
+    exit [lindex $result 3]
+  }
+}
+' "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
+else
+  rsync "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
+fi
