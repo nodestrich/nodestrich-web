@@ -149,7 +149,12 @@ if [[ -n "$DREAMHOST_PASSWORD_FILE" ]]; then
 
   export DREAMHOST_PASSWORD
   DREAMHOST_PASSWORD="$(tr -d '\r\n' < "$DREAMHOST_PASSWORD_FILE")"
-  expect -c '
+
+  # expect only populates $argv from trailing args when given a script file,
+  # not with -c, so write the script out rather than passing it inline.
+  EXPECT_SCRIPT="$(mktemp)"
+  trap 'rm -f "$EXPECT_SCRIPT"' EXIT
+  cat > "$EXPECT_SCRIPT" <<'EXPECT_EOF'
 set timeout -1
 set password $env(DREAMHOST_PASSWORD)
 spawn rsync {*}$argv
@@ -167,7 +172,8 @@ expect {
     exit [lindex $result 3]
   }
 }
-' "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
+EXPECT_EOF
+  expect "$EXPECT_SCRIPT" "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
 else
   rsync "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
 fi
