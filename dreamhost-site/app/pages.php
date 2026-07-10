@@ -87,6 +87,11 @@ function render_home_page(): string
         <span>Members</span>
       </article>
       <article class="stat-card">
+        <?php $activeCount = count(filter_active_members($members)); ?>
+        <strong class="js-counter" data-target="<?= e((string) $activeCount) ?>"><?= e((string) $activeCount) ?></strong>
+        <span>Active Nodes</span>
+      </article>
+      <article class="stat-card">
         <strong class="js-counter" data-target="<?= e((string) $community['community_stats']['total_channels']) ?>"><?= e((string) $community['community_stats']['total_channels']) ?></strong>
         <span>Channels</span>
       </article>
@@ -111,15 +116,27 @@ function render_home_page(): string
     return (string) ob_get_clean();
 }
 
+function filter_active_members(array $members): array
+{
+    return array_values(array_filter($members, static function (array $member): bool {
+        $capacity = (int) ($member['capacity_sats'] ?? 0);
+        $channels = (int) ($member['channels'] ?? 0);
+
+        return $capacity > 0 && $channels > 0;
+    }));
+}
+
 function render_member_directory(array $members): string
 {
+    $members = filter_active_members($members);
+
     ob_start();
     ?>
 <section class="member-directory">
   <div class="directory-toolbar">
-    <h2>Members</h2>
+    <h2>Nodes</h2>
     <div class="toolbar-actions">
-      <input type="search" placeholder="Search members..." data-member-search>
+      <input type="search" placeholder="Search nodes..." data-member-search>
       <span class="muted small" data-member-count><?= count($members) ?> of <?= count($members) ?></span>
     </div>
   </div>
@@ -149,7 +166,7 @@ function render_member_directory(array $members): string
       </a>
     <?php endforeach; ?>
   </div>
-  <p class="empty-state" data-member-empty hidden>No members found.</p>
+  <p class="empty-state" data-member-empty hidden>No nodes found.</p>
 </section>
 <?php
     return (string) ob_get_clean();

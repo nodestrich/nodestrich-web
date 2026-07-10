@@ -240,6 +240,12 @@ button {
   color: #d1d5db;
   padding: 10px 40px 10px 12px;
   outline: none;
+  appearance: none;
+}
+
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  appearance: none;
 }
 
 .tool-panel textarea {
@@ -354,7 +360,7 @@ button {
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
   margin-bottom: 32px;
 }
@@ -418,6 +424,10 @@ button {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 32px 16px;
+}
+
+.member-card[hidden] {
+  display: none;
 }
 
 .member-card {
