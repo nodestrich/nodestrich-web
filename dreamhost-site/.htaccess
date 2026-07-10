@@ -1,3 +1,10 @@
+Header set Access-Control-Allow-Origin "*"
+Redirect /.well-known/lnurlp/daniel https://getalby.com/.well-known/lnurlp/thedaniel
+Redirect /.well-known/lnurlp/nodestrich https://getalby.com/.well-known/lnurlp/nodestrich
+<If "%{REQUEST_URI} =~ m#^/.well-known/lnurlp/#">
+Header always set Access-Control-Allow-Origin "*"
+</If>
+
 Options -Indexes
 DirectoryIndex index.php
 
@@ -8,4 +15,6 @@ RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 RewriteRule ^index\.php$ - [L]
+
+RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteRule . /index.php [L]
