@@ -1,0 +1,35 @@
+.DS_Store
+.git/
+.svn/
+.hg/
+
+# Local/editor noise
+*.swp
+*.swo
+*.bak
+*.old
+*.orig
+
+# Secrets and server-local config. Keep these on the server or in ignored local files.
+.env
+.env.*
+*.pem
+*.key
+.htpasswd
+.htpasswd*
+wp-config.php
+config.local.php
+.htaccess
+.well-known/
+.well-known/nostr.json
+cgi-bin/
+
+# Dumps, logs, and transient runtime files.
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+logs/
+tmp/
+cache/
+sessions/
