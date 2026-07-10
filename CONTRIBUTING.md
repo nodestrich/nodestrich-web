@@ -29,7 +29,7 @@ Thank you for your interest in contributing to Nodestrich! This document provide
 ### Prerequisites
 - GitHub account
 - Basic knowledge of Markdown (for content)
-- Node.js 18+ (for code contributions)
+- PHP (for code contributions — see `dreamhost-site/README.md`)
 - Understanding of Lightning Network concepts
 
 ### Setting Up Development Environment
@@ -40,18 +40,7 @@ Thank you for your interest in contributing to Nodestrich! This document provide
    git clone https://github.com/nodestrich/nodestrich-web.git
    cd nodestrich-web
    ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Create environment file:
-   ```bash
-   cp .env.local.example .env.local
-   ```
-5. Start development server:
-   ```bash
-   npm run dev
-   ```
+3. See `dreamhost-site/README.md` and `AGENTS.md` for working on the PHP site locally and the DreamHost deploy workflow.
 
 ## Content Guidelines
 
@@ -126,28 +115,19 @@ lncli getinfo
 
 ## Code Guidelines
 
-### TypeScript
-- Use TypeScript for all new code
-- Define proper types and interfaces
-- Avoid `any` types when possible
-- Use meaningful variable names
+### PHP
+- Follow the existing structure under `dreamhost-site/app/`
+- Use meaningful variable and function names
+- Handle errors gracefully, especially around external API calls (Amboss)
 
-### React Components
-- Use functional components with hooks
-- Follow the existing component structure
-- Add proper TypeScript props interfaces
-- Include accessibility attributes
+### Frontend (assets/app.js, assets/styles.css)
+- Plain JavaScript and CSS, no build step — keep it dependency-free
+- Follow the existing dark theme and responsive layout
+- Test on both desktop and mobile
 
-### Styling
-- Use Tailwind CSS classes
-- Follow the existing color scheme
-- Ensure responsive design
-- Test dark mode compatibility
-
-### API Routes
-- Handle errors gracefully
-- Include proper TypeScript types
-- Add appropriate caching headers
+### Routing & APIs
+- New routes are added to the router in `dreamhost-site/app/pages.php` / `app/api.php`
+- Add appropriate caching headers where relevant
 - Document endpoint behavior
 
 ## Pull Request Process
@@ -161,9 +141,9 @@ lncli getinfo
 
 ### For Code Changes
 1. Create a feature branch: `git checkout -b fix-search-bug`
-2. Make your changes
-3. Run tests: `npm test`
-4. Run linting: `npm run lint`
+2. Make your changes under `dreamhost-site/`
+3. Validate locally per `AGENTS.md`: `php -l` on changed PHP files, `node --check dreamhost-site/assets/app.js`
+4. Run a dry-run deploy (`bash scripts/dreamhost-rsync.sh push`) and review the itemized changes
 5. Commit with clear messages
 6. Push to your fork and create a pull request
 

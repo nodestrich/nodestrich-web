@@ -1,6 +1,8 @@
 # Nodestrich.com - Lightning Network Community Resource
 
-A modern, community-driven platform for Lightning Network node operators. Built with Next.js and featuring a git-based knowledge base system that enables community contributions.
+A modern, community-driven platform for Lightning Network node operators, featuring a git-based knowledge base system that enables community contributions.
+
+The live site (nodestrich.com) is a PHP/Apache application deployed to DreamHost — see `dreamhost-site/` and the Deployment section below.
 
 ## Features
 
@@ -13,57 +15,14 @@ A modern, community-driven platform for Lightning Network node operators. Built 
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
+- **Runtime**: PHP on Apache, routed through a front controller via `.htaccess`
+- **Deployment**: rsync over SSH — see `AGENTS.md` and `scripts/dreamhost-rsync.sh`
 - **Content**: MDX with frontmatter
-- **Deployment**: Vercel
 - **API**: Amboss GraphQL API
 
 ## Local Development
 
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Amboss API key
-
-### Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/nodestrich/nodestrich-web.git
-cd nodestrich-web
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create environment file:
-```bash
-cp .env.local.example .env.local
-```
-
-4. Add your Amboss API key to `.env.local`:
-```
-AMBOSS_API_KEY=your_api_key_here
-```
-
-5. Start development server:
-```bash
-npm run dev
-```
-
-6. Open [http://localhost:3000](http://localhost:3000)
-
-### Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+See `dreamhost-site/README.md` for working on the PHP site locally, and `AGENTS.md` for the full DreamHost workflow: pulling the live site, validating PHP/JS changes (`php -l`, `node --check`), and running the rsync dry-run/deploy.
 
 ## Content Management
 
@@ -90,11 +49,12 @@ Write your content in Markdown...
 ### Directory Structure
 
 ```
-content/
+dreamhost-site/content/
 ├── learn/
 │   ├── beginner/
 │   ├── intermediate/
 │   └── advanced/
+├── highlights/
 ├── tools/
 └── guides/
 ```
@@ -141,8 +101,6 @@ The current live `nodestrich.com` site is hosted on DreamHost shared Apache/PHP 
 
 Use the rsync workflow in `AGENTS.md` and `scripts/dreamhost-rsync.sh` to update DreamHost. Run `bash scripts/dreamhost-rsync.sh push` first for a dry-run, then `bash scripts/dreamhost-rsync.sh push --apply` to deploy after reviewing the changes. For the first replacement of the old site, back up the old docroot and use a reviewed `--delete` deploy so stale Apache files do not shadow the PHP router.
 
-The Next.js app remains in this repository for reference, but Vercel is not the current live production target.
-
 ### Environment Variables
 
 Set these in `dreamhost-site/config.local.php` on DreamHost or as server environment variables:
@@ -154,6 +112,7 @@ Set these in `dreamhost-site/config.local.php` on DreamHost or as server environ
 
 - `GET /api/community` - Fetch community stats and member list
 - `GET /api/search?q={query}` - Search content
+- `GET /api/btc-price` - Fetch current BTC/USD price
 
 ## Community Links
 

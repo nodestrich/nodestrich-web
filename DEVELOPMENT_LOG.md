@@ -228,3 +228,18 @@ The new platform positions Nodestrich as the definitive Lightning Network resour
 - Fostering collaboration between node operators of all skill levels
 
 **Status**: Ready for production deployment and community launch! 🚀⚡
+
+## Development Session: July 9, 2026
+
+### Pivot: Back to PHP/DreamHost
+
+The Next.js rebuild above was completed but never launched — `nodestrich.com` continued running the whole time on the original DreamHost PHP/Apache hosting. Rather than migrate to Vercel, the decision was made to keep DreamHost as the permanent home and bring the Next.js work's features (knowledge base, community stats, search, highlights) to a PHP rewrite instead.
+
+#### What Changed
+- Built `dreamhost-site/`, a PHP/Apache conversion carrying forward the Next.js app's content, features, and design (community stats, member directory, search, highlights, BTC price widget).
+- Added an rsync-based deploy workflow (`scripts/dreamhost-rsync.sh`, `AGENTS.md`) to pull/push the live DreamHost site, dry-run by default.
+- Deployed `dreamhost-site/` to production: merged the server's existing `.htaccess` rules (Lightning Address/lnurlp redirects) with the new PHP router's rewrite rules, and configured the Amboss API key via `config.local.php` (kept off git, placed on the server directly).
+- Disconnected the Vercel project's GitHub auto-deploy integration, since Vercel is no longer a deployment target.
+- Removed the Next.js app (`src/`, root `content/`, `public/`, and associated config/tooling) from this repository — it was never launched, and DreamHost/PHP is now the sole production target.
+
+**Status**: DreamHost/PHP is live and is the only production target for nodestrich.com.
