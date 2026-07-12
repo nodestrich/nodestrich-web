@@ -142,6 +142,7 @@ function render_member_directory(array $members): string
         <option value="capacity">Sort: Capacity</option>
         <option value="channels">Sort: Channels</option>
       </select>
+      <button type="button" class="sort-direction" data-member-sort-direction aria-label="Reverse sort order" aria-pressed="false">&#8595;</button>
       <span class="muted small" data-member-count><?= count($members) ?> of <?= count($members) ?></span>
     </div>
   </div>

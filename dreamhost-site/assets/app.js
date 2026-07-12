@@ -147,6 +147,7 @@
   function setupMemberDirectory() {
     const input = document.querySelector('[data-member-search]');
     const sortSelect = document.querySelector('[data-member-sort]');
+    const sortDirection = document.querySelector('[data-member-sort-direction]');
     const grid = document.querySelector('[data-member-grid]');
     const count = document.querySelector('[data-member-count]');
     const empty = document.querySelector('[data-member-empty]');
@@ -154,6 +155,7 @@
 
     const cards = Array.from(grid.querySelectorAll('[data-member]'));
     const total = cards.length;
+    let reversed = false;
 
     input.addEventListener('input', () => {
       const query = input.value.trim().toLowerCase();
@@ -169,20 +171,35 @@
       if (empty) empty.hidden = visible !== 0;
     });
 
+    function applySort() {
+      const sortBy = sortSelect ? sortSelect.value : 'default';
+      let ordered = cards;
+
+      if (sortBy === 'capacity' || sortBy === 'channels') {
+        ordered = [...cards].sort((a, b) => {
+          const aVal = Number(a.getAttribute(`data-${sortBy}`) || 0);
+          const bVal = Number(b.getAttribute(`data-${sortBy}`) || 0);
+          return bVal - aVal;
+        });
+      } else {
+        ordered = [...cards];
+      }
+
+      if (reversed) ordered.reverse();
+
+      ordered.forEach((card) => grid.appendChild(card));
+    }
+
     if (sortSelect) {
-      sortSelect.addEventListener('change', () => {
-        const sortBy = sortSelect.value;
-        let ordered = cards;
+      sortSelect.addEventListener('change', applySort);
+    }
 
-        if (sortBy === 'capacity' || sortBy === 'channels') {
-          ordered = [...cards].sort((a, b) => {
-            const aVal = Number(a.getAttribute(`data-${sortBy}`) || 0);
-            const bVal = Number(b.getAttribute(`data-${sortBy}`) || 0);
-            return bVal - aVal;
-          });
-        }
-
-        ordered.forEach((card) => grid.appendChild(card));
+    if (sortDirection) {
+      sortDirection.addEventListener('click', () => {
+        reversed = !reversed;
+        sortDirection.classList.toggle('is-reversed', reversed);
+        sortDirection.setAttribute('aria-pressed', String(reversed));
+        applySort();
       });
     }
   }
