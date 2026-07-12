@@ -137,6 +137,11 @@ function render_member_directory(array $members): string
     <h2>Nodes</h2>
     <div class="toolbar-actions">
       <input type="search" placeholder="Search nodes..." data-member-search>
+      <select data-member-sort aria-label="Sort nodes">
+        <option value="default">Sort: Default</option>
+        <option value="capacity">Sort: Capacity</option>
+        <option value="channels">Sort: Channels</option>
+      </select>
       <span class="muted small" data-member-count><?= count($members) ?> of <?= count($members) ?></span>
     </div>
   </div>
@@ -153,6 +158,8 @@ function render_member_directory(array $members): string
         rel="noopener noreferrer"
         class="member-card"
         data-member="<?= e(strtolower($alias)) ?>"
+        data-capacity="<?= e((string) $capacity) ?>"
+        data-channels="<?= e((string) $channels) ?>"
       >
         <span class="member-card__name"><?= e($alias) ?></span>
         <span class="member-card__row">

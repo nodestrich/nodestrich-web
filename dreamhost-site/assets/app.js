@@ -146,6 +146,7 @@
 
   function setupMemberDirectory() {
     const input = document.querySelector('[data-member-search]');
+    const sortSelect = document.querySelector('[data-member-sort]');
     const grid = document.querySelector('[data-member-grid]');
     const count = document.querySelector('[data-member-count]');
     const empty = document.querySelector('[data-member-empty]');
@@ -167,6 +168,23 @@
       if (count) count.textContent = `${visible} of ${total}`;
       if (empty) empty.hidden = visible !== 0;
     });
+
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => {
+        const sortBy = sortSelect.value;
+        let ordered = cards;
+
+        if (sortBy === 'capacity' || sortBy === 'channels') {
+          ordered = [...cards].sort((a, b) => {
+            const aVal = Number(a.getAttribute(`data-${sortBy}`) || 0);
+            const bVal = Number(b.getAttribute(`data-${sortBy}`) || 0);
+            return bVal - aVal;
+          });
+        }
+
+        ordered.forEach((card) => grid.appendChild(card));
+      });
+    }
   }
 
   function setupNostrLatestPost() {

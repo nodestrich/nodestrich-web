@@ -248,6 +248,19 @@ input[type="search"]::-webkit-search-decoration {
   appearance: none;
 }
 
+.member-directory select {
+  border: 1px solid var(--bg);
+  border-radius: 6px;
+  background: var(--surface);
+  color: #d1d5db;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.member-directory select:focus {
+  border-color: var(--accent);
+}
+
 .tool-panel textarea {
   min-height: 88px;
   resize: vertical;

@@ -217,6 +217,7 @@ GRAPHQL;
         usort($members, static function (array $a, array $b): int {
             $aAlias = normalize_member_alias((string) ($a['alias'] ?? ''), (string) ($a['pub_key'] ?? ''));
             $bAlias = normalize_member_alias((string) ($b['alias'] ?? ''), (string) ($b['pub_key'] ?? ''));
+
             return compare_member_aliases($aAlias, $bAlias);
         });
 
@@ -268,6 +269,16 @@ function normalize_member_alias(string $alias, string $pubKey): string
 
 function compare_member_aliases(string $a, string $b): int
 {
+    $aIsPubkeyLike = is_pubkey_like_alias($a);
+    $bIsPubkeyLike = is_pubkey_like_alias($b);
+
+    if ($aIsPubkeyLike !== $bIsPubkeyLike) {
+        return $aIsPubkeyLike ? 1 : -1;
+    }
+
+    $aClean = strip_alias_decoration($a);
+    $bClean = strip_alias_decoration($b);
+
     static $collator = null;
     static $hasCollator = null;
 
@@ -281,10 +292,23 @@ function compare_member_aliases(string $a, string $b): int
     }
 
     if ($hasCollator && $collator instanceof Collator) {
-        return $collator->compare($a, $b);
+        return $collator->compare($aClean, $bClean);
     }
 
-    return member_alias_sort_bucket($a) <=> member_alias_sort_bucket($b) ?: strcasecmp($a, $b);
+    return member_alias_sort_bucket($aClean) <=> member_alias_sort_bucket($bClean) ?: strcasecmp($aClean, $bClean);
+}
+
+function is_pubkey_like_alias(string $alias): bool
+{
+    return preg_match('/^[0-9a-f]{16,}$/i', trim($alias)) === 1;
+}
+
+function strip_alias_decoration(string $alias): string
+{
+    $stripped = preg_replace('/[^\p{L}\p{N}\s]/u', '', $alias) ?? $alias;
+    $stripped = preg_replace('/\s+/', ' ', $stripped) ?? $stripped;
+
+    return trim($stripped);
 }
 
 function member_alias_sort_bucket(string $alias): int
