@@ -142,38 +142,25 @@ if [[ -n "$DREAMHOST_PASSWORD_FILE" ]]; then
     exit 2
   fi
 
-  if ! command -v expect >/dev/null 2>&1; then
-    echo "DREAMHOST_PASSWORD_FILE requires expect, but expect is not installed." >&2
-    exit 2
-  fi
-
   export DREAMHOST_PASSWORD
   DREAMHOST_PASSWORD="$(tr -d '\r\n' < "$DREAMHOST_PASSWORD_FILE")"
 
-  # expect only populates $argv from trailing args when given a script file,
-  # not with -c, so write the script out rather than passing it inline.
-  EXPECT_SCRIPT="$(mktemp)"
-  trap 'rm -f "$EXPECT_SCRIPT"' EXIT
-  cat > "$EXPECT_SCRIPT" <<'EXPECT_EOF'
-set timeout -1
-set password $env(DREAMHOST_PASSWORD)
-spawn rsync {*}$argv
-expect {
-  -re "(?i)are you sure you want to continue connecting" {
-    send "yes\r"
-    exp_continue
-  }
-  -re "(?i)password:" {
-    send "$password\r"
-    exp_continue
-  }
-  eof {
-    catch wait result
-    exit [lindex $result 3]
-  }
-}
-EXPECT_EOF
-  expect "$EXPECT_SCRIPT" "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
+  # Feed the password to ssh via SSH_ASKPASS (same method the sidecar.top and
+  # boxtop deploys use). SSH_ASKPASS_REQUIRE=force makes ssh invoke the helper
+  # even when a tty is present, and stdin is redirected from /dev/null so ssh
+  # never blocks on an interactive prompt. This replaces an earlier expect
+  # wrapper that hung on DreamHost's keyboard-interactive auth.
+  ASKPASS_SCRIPT="$(mktemp)"
+  trap 'rm -f "$ASKPASS_SCRIPT"' EXIT
+  cat > "$ASKPASS_SCRIPT" <<'ASKPASS_EOF'
+#!/usr/bin/env bash
+echo "$DREAMHOST_PASSWORD"
+ASKPASS_EOF
+  chmod +x "$ASKPASS_SCRIPT"
+
+  export SSH_ASKPASS="$ASKPASS_SCRIPT"
+  export SSH_ASKPASS_REQUIRE=force
+  rsync "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION" < /dev/null
 else
   rsync "${RSYNC_ARGS[@]}" "$SOURCE" "$DESTINATION"
 fi
