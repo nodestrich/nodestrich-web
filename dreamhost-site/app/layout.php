@@ -30,7 +30,11 @@ function render_layout(string $title, string $description, string $content, stri
   <meta name="twitter:title" content="<?= e($fullTitle) ?>">
   <meta name="twitter:description" content="<?= e($description) ?>">
   <meta name="twitter:image" content="<?= e($siteUrl) ?>/social_preview.jpg">
+  <link rel="icon" type="image/svg+xml" href="<?= asset('favicon.svg') ?>">
+  <link rel="icon" type="image/png" sizes="96x96" href="<?= asset('favicon-96x96.png') ?>">
   <link rel="icon" href="<?= asset('favicon.ico') ?>">
+  <link rel="apple-touch-icon" sizes="180x180" href="<?= asset('apple-touch-icon.png') ?>">
+  <link rel="manifest" href="<?= asset('site.webmanifest') ?>">
   <link rel="stylesheet" href="<?= asset('assets/styles.css') ?>">
   <script defer src="<?= asset('assets/app.js') ?>"></script>
 </head>
