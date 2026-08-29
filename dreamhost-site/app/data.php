@@ -113,7 +113,7 @@ function tool_directory(): array
             'category' => 'network-explorers',
         ],
         [
-            'name' => 'LNRouter',
+            'name' => 'LNRouter Graph',
             'description' => 'Lightning Network routing intelligence platform. Visualize network graph topology, analyze routing paths, and optimize node connectivity.',
             'url' => 'https://lnrouter.app/graph',
             'category' => 'network-explorers',
