@@ -113,6 +113,12 @@ function tool_directory(): array
             'category' => 'network-explorers',
         ],
         [
+            'name' => 'LNRouter',
+            'description' => 'Lightning Network routing intelligence platform. Visualize network graph topology, analyze routing paths, and optimize node connectivity.',
+            'url' => 'https://lnrouter.app/graph',
+            'category' => 'network-explorers',
+        ],
+        [
             'name' => 'LN+',
             'description' => 'Peer-to-peer Lightning channel swap marketplace. Organize triangular swaps and liquidity rings to build balanced channels.',
             'url' => 'https://lightningnetwork.plus/',

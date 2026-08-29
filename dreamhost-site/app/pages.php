@@ -386,6 +386,7 @@ function render_tools_page(): string
     Interactive tools for Lightning Network operations, plus a curated directory of essential
     resources for node operators.
   </p>
+  <p class="button-row"><a class="button secondary inline" href="#tool-directory">Skip to Tool Directory &#8628;</a></p>
 
   <section class="subsection">
     <h2>Interactive Tools</h2>
@@ -397,7 +398,7 @@ function render_tools_page(): string
   </section>
 
   <section class="subsection">
-    <h2>Tool Directory</h2>
+    <h2 id="tool-directory">Tool Directory</h2>
     <div data-filter-scope>
       <div class="filter-tabs" role="tablist" aria-label="Tool categories">
         <button type="button" class="filter-tab is-active" data-filter="all">All</button>
