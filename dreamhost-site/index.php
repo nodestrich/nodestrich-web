@@ -24,6 +24,11 @@ try {
         exit;
     }
 
+    if ($path === '/node') {
+        handle_node_redirect();
+        exit;
+    }
+
     [$title, $description, $content] = route_page($path);
     render_layout($title, $description, $content, $path);
 } catch (Throwable $exception) {

@@ -45,6 +45,11 @@ function handle_signal_redirect(): void
     redirect_to('/community');
 }
 
+function handle_node_redirect(): void
+{
+    redirect_to('https://amboss.space/node/022ea68ac7588959a6a4829a5ff176c296329d614b90b3f5f4456b5d6130ea50f6');
+}
+
 function render_home_page(): string
 {
     $data = get_community_info();
