@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// These files are loaded by app/bootstrap.php; refuse a direct request for them.
+defined('ROOT_PATH') || exit;
+
 const LEARN_CATEGORIES = ['beginner', 'intermediate', 'advanced'];
 
 function parse_front_matter(string $raw): array

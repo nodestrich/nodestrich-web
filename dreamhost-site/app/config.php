@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// These files are loaded by app/bootstrap.php; refuse a direct request for them.
+defined('ROOT_PATH') || exit;
+
 $GLOBALS['APP_CONFIG'] = [
     'site_name' => 'Nodestrich',
     'site_url' => 'https://nodestrich.com',

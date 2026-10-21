@@ -1,0 +1,9 @@
+{
+    "name": "nodestrich/nodestrich-web",
+    "description": "nodestrich-web: plain PHP, no third-party dependencies",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.3"
+    }
+}
