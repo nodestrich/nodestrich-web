@@ -20,6 +20,11 @@ The live site (nodestrich.com) is a PHP/Apache application deployed to DreamHost
 - **Content**: MDX with frontmatter
 - **API**: Amboss GraphQL API
 
+## Security
+
+- Every include in `dreamhost-site/app/` except `bootstrap.php` (which defines `ROOT_PATH`) starts with `defined('ROOT_PATH') || exit;`, so a direct HTTP request for `/app/*.php` returns an empty response instead of executing the file. Applied Oct 21, 2026 in commit `b5b1014` (`fix/php-security-hardening`) and deployed to nodestrich.com, which runs PHP 8.3.
+- `composer.json` declares the PHP floor (`>=8.3`); CI lints every PHP file on PHP 8.3, 8.4 and 8.5.
+
 ## Local Development
 
 See `dreamhost-site/README.md` for working on the PHP site locally, and `AGENTS.md` for the full DreamHost workflow: pulling the live site, validating PHP/JS changes (`php -l`, `node --check`), and running the rsync dry-run/deploy.
