@@ -1,0 +1,154 @@
+---
+title: 'Rebalancing Core Lightning with sling'
+description: 'How the sling plugin rebalances Core Lightning channels automatically: pull and push jobs, the settings that matter, how to read its stats, and lessons from running it on a small routing node.'
+category: 'intermediate'
+tags: ['core-lightning', 'cln', 'sling', 'rebalancing', 'liquidity', 'fees', 'plugins', 'startos']
+author: 'Nodestrich Community'
+publishedAt: '2026-11-06'
+updatedAt: '2026-11-06'
+---
+
+# Rebalancing Core Lightning with sling
+
+[Channel Management Best Practices](/learn/intermediate/channel-management) explains why channels drift out of balance. This guide is about one tool for fixing that on Core Lightning (CLN): [sling](https://github.com/daywalker90/sling), a plugin by daywalker90 that runs circular rebalances for you in the background. It is based on the original `circular` plugin by giovannizotta and is actively maintained for current CLN releases.
+
+A circular rebalance is a payment from your node, through the network, back to your node: sats leave through one of your channels and come back through another. You pay routing fees to the nodes in between, and your total balance stays the same minus those fees. sling automates this: you tell it which channel to fill or empty, how much you are willing to pay, and it keeps trying routes until the job is done.
+
+---
+
+## Before You Rebalance
+
+Rebalancing costs real sats, so decide first whether it is worth it at all.
+
+- **A full channel is not automatically a problem.** If a peer keeps sending you payments, that channel is your inbound source and other channels earn fees because of it. Judge a channel by the fees it earns going out *plus* the fees it brings in for your other channels, not by its local percentage.
+- **Try the fee lever first.** Lowering the out fee of a full channel lets the network drain it for you, and you earn a little instead of paying.
+- **The money rule.** Never pay more ppm to move liquidity into a channel than that channel charges going out. If you pull sats into a channel that charges 240 ppm and pay 300 ppm to do it, every sat that later routes through it loses you money.
+
+If those three points still say "rebalance", sling is a good tool for it.
+
+---
+
+## Getting sling
+
+- **StartOS:** the Core Lightning package ships sling (and CLBOSS) as bundled plugins; enable it in the service's configuration. No separate install needed.
+- **Other setups:** download a release binary (x86_64, armv7, aarch64 and macOS builds are published) and load it with `plugin=/path/to/sling` in your CLN config, or put it in your plugins folder.
+
+Check it is running:
+
+```
+lightning-cli sling-version
+```
+
+Set `sling-autogo=true` in the config if you want jobs to resume automatically whenever CLN restarts (after updates, reboots or nightly backups that stop the node).
+
+---
+
+## Core Concepts
+
+sling has two ways of working:
+
+- **Jobs** (`sling-job`) run continuously until the channel reaches a target balance, then idle and wake up again if it drifts back.
+- **One-time rebalances** (`sling-once`) move an exact total amount and then stop.
+
+Every job has a **direction**:
+
+- `pull` fills a channel: sats come *into* it from your other channels.
+- `push` empties a channel: sats leave it toward your other channels.
+
+The settings that matter most:
+
+| Setting | Meaning |
+|---|---|
+| `amount` | Size of each individual rebalance (chunk) in sats |
+| `maxppm` | The most you will pay, as *effective* ppm including base fees |
+| `outppm` | Which of your channels may be used on the other end. For `pull`: channels where you charge **≤** outppm. For `push`: channels where you charge **≥** outppm |
+| `candidates` | An explicit list of your channels to use on the other end (can be combined with outppm) |
+| `target` | When to stop, as a fraction of capacity on the desired side. Default `0.5` |
+| `maxhops` | Longest route allowed. Default `8` |
+| `depleteuptopercent` / `depleteuptoamount` | How much to leave in the candidate channels, so a rebalance doesn't just empty another channel you need |
+
+Either `outppm` or `candidates` must be set.
+
+---
+
+## Examples
+
+All sling commands that take settings **must** use the `-k key=value` form.
+
+Pull up to 40% local into a channel in 25k chunks, paying at most 200 ppm, using only channels where you charge 100 ppm or less as the source:
+
+```
+lightning-cli sling-job -k scid=800000x100x0 direction=pull amount=25000 maxppm=200 outppm=100 target=0.4
+lightning-cli sling-go 800000x100x0
+```
+
+Push sats out of a full channel into two specific channels, max 150 ppm, allowing longer routes:
+
+```
+lightning-cli sling-job -k scid=800000x200x1 direction=push amount=25000 maxppm=150 maxhops=10 candidates='["800000x300x0","800000x400x2"]'
+lightning-cli sling-go 800000x200x1
+```
+
+Move exactly 250k once and stop (`onceamount` must be a multiple of `amount`):
+
+```
+lightning-cli sling-once -k scid=800000x100x0 direction=pull amount=25000 onceamount=250000 maxppm=200 outppm=100
+```
+
+Stop or remove jobs:
+
+```
+lightning-cli sling-stop 800000x100x0
+lightning-cli sling-deletejob 800000x100x0
+```
+
+---
+
+## Watching What It Does
+
+```
+lightning-cli sling-stats                 # overview of all jobs
+lightning-cli sling-stats 800000x100x0    # successes, failures and fees for one job
+lightning-cli sling-jobsettings           # the settings sling actually uses
+```
+
+Look at three things:
+
+- **Successes and their ppm.** If successful rebalances cost close to your `maxppm`, the channel is expensive to refill; consider whether it is worth it.
+- **Failure reasons.** `TEMPORARY_CHANNEL_FAILURE` means a hop along the route had no liquidity. Lots of these toward the same part of the network means that area is drained, not that your settings are wrong.
+- **`NoCheapRoute`.** sling found routes, but all of them cost more than `maxppm`. Raising `maxppm` a little can help, but stay below the channel's own out fee.
+
+Failed attempts cost nothing. Only successful rebalances pay fees.
+
+---
+
+## Gotchas
+
+- **Re-running `sling-job` on an existing job stops it.** Changing a setting by running `sling-job` again leaves the job stopped until you run `sling-go <scid>`. Use `sling-jobsettings` to confirm what is active.
+- **The default `maxhops` can be too low.** Cheap routes are often long. If a job reports no routes at all, try `maxhops=10`.
+- **Excluded peers hide routes.** Peers added with `sling-except-peer add` (or channels via `sling-except-chan`) are never used, for every job. An old entry can block the cheapest path for months. Review the list with `sling-except-peer list` and remove old entries with `sling-except-peer remove`.
+- **sling learns, and that cuts both ways.** It remembers which channels failed and what liquidity it believes is where. That avoids repeating doomed routes, but it can also make sling quote 1,000+ ppm routes while CLN's plain `getroute` still shows 50 ppm ones. The beliefs reset every 6 hours by default (`sling-reset-liquidity-interval`).
+- **Restart it properly.** If you start sling while it is already running, its liquidity beliefs are not saved. Run `lightning-cli plugin stop sling` before starting it again.
+- **`sling-once` doesn't survive restarts.** A plugin or node restart forgets running one-time rebalances. Use a job if it has to keep going.
+- **Watch the source channels.** With a broad `outppm`, sling may take liquidity from a channel you care about. Use `candidates` when you know exactly where the sats should come from, and keep the deplete settings at their defaults or higher.
+
+---
+
+## Lessons From a Small Routing Node
+
+Real numbers from running sling on a ~20-channel CLN node:
+
+- **Patience pays.** A pull job into a depleted channel (out fee 240 ppm, `maxppm` 230) found nothing for the first days, then moved 750k sats at an average of 213 ppm. The margin was thin, but positive.
+- **A cap just below the market never fills.** Another pull job at `maxppm` 240 never succeeded in four days of trying: the cheapest real routes cost 252–357 ppm. If the routes cost more than the channel earns, the honest answer is to leave it.
+- **You can't push into a drained network.** Push jobs out of two ~95% full channels returned only `NoCheapRoute`; the cheapest routes were around 1,100 ppm over 10 hops. Probing showed the problem was not the peer but the channels *beyond* it, which were already empty toward the big sinks. Those channels turned out to be the node's best inbound sources, so they stayed full on purpose and their out fee was lowered instead.
+- **Forwarding did more than sling.** A third full channel, where sling only found ~1,000 ppm routes, drained from 94% to 61% through normal forwarding in a few days, at no cost.
+
+---
+
+## A Simple Routine
+
+1. Find channels that need help by their value, not their balance.
+2. Lower the out fee of full channels first and give it a few days.
+3. For channels that really need refilling, run a `pull` job with `maxppm` below the channel's own out fee and a `target` of 0.3–0.5.
+4. Check `sling-stats` every few days. Raise `maxppm` in small steps only while it stays below the out fee.
+5. If a job never succeeds, stop it. The network is telling you that liquidity isn't available at a price worth paying.

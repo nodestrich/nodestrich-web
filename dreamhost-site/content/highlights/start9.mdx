@@ -1,0 +1,13 @@
+---
+title: 'Start9 (StartOS)'
+description: 'Self-hosted server OS for running Bitcoin, Lightning and dozens of other services without the command line'
+url: 'https://start9.com'
+category: 'tools'
+tags: ['node', 'self-hosted', 'core-lightning', 'lnd', 'wireguard', 'backups', 'open-source']
+featured: true
+publishedAt: '2026-11-06'
+---
+
+StartOS is an open-source operating system for personal servers, run on a Start9 Server One or your own hardware. You manage everything through a web UI, and Bitcoin Core, Core Lightning, LND, LNbits, BTCPay Server, RTL and many more install from the Marketplace in a few clicks. Each service declares its dependencies, so a Lightning node finds its Bitcoin backend on its own.
+
+For node runners, the strength is that the boring parts are handled. Since StartOS 0.4, services are reachable on your local network out of the box, and you decide per service how far they go beyond it. With StartTunnel, a small VPS connected over WireGuard (any provider works; [LNVPS](https://lnvps.net/), for example, needs only a Nostr npub to sign up, no email, and takes payment in sats over Lightning), you can publish a service to the internet under your own domain, for example a clearnet address for your Lightning node, without exposing your home IP or opening router ports. Or you keep it private: it stays on a private domain, and your phone or laptop reaches it by connecting to the same VPS with a WireGuard client. Encrypted backups of the whole server go to a USB drive or network share, and the public [security status page](https://start9.com/security-status) tracks every relevant CVE with a clear "affected / not affected / fixed" verdict. Power users still get SSH access and `start-cli` for scripting. The Core Lightning package even ships popular plugins such as sling and CLBOSS, ready to enable (see [Rebalancing Core Lightning with sling](/learn/intermediate/cln-sling-rebalancing)).
