@@ -26,13 +26,13 @@ function render_layout(string $title, string $description, string $content, stri
   <meta name="description" content="<?= e($description) ?>">
   <meta property="og:title" content="<?= e($fullTitle) ?>">
   <meta property="og:description" content="<?= e($description) ?>">
-  <meta property="og:image" content="<?= e($siteUrl) ?>/social_preview.jpg">
+  <meta property="og:image" content="<?= e($siteUrl) ?>/social_preview.jpg?v=2">
   <meta property="og:url" content="<?= e($siteUrl . $currentPath) ?>">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<?= e($fullTitle) ?>">
   <meta name="twitter:description" content="<?= e($description) ?>">
-  <meta name="twitter:image" content="<?= e($siteUrl) ?>/social_preview.jpg">
+  <meta name="twitter:image" content="<?= e($siteUrl) ?>/social_preview.jpg?v=2">
   <link rel="icon" type="image/svg+xml" href="<?= asset('favicon.svg') ?>">
   <link rel="icon" type="image/png" sizes="96x96" href="<?= asset('favicon-96x96.png') ?>">
   <link rel="icon" href="<?= asset('favicon.ico') ?>">
@@ -42,10 +42,11 @@ function render_layout(string $title, string $description, string $content, stri
   <script defer src="<?= asset('assets/app.js') ?>"></script>
 </head>
 <body>
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
   <nav class="site-nav">
     <div class="container nav-inner">
       <a href="/" class="brand-link" aria-label="Nodestrich home">
-        <img src="<?= asset('nodestrich_logo_white.svg') ?>" alt="Nodestrich" class="brand-logo">
+        <img src="<?= asset('nodestrich_logo_black_circle.svg') ?>" alt="Nodestrich" class="brand-logo">
       </a>
 
       <div class="nav-desktop">
@@ -83,7 +84,8 @@ function render_layout(string $title, string $description, string $content, stri
   </main>
 
   <footer class="site-footer">
-    <div class="container">
+    <div class="container footer-inner">
+      <img src="<?= asset('nodestrich_logo_white.svg') ?>" alt="Nodestrich" class="footer-logo">
       <p>Nodestrich is an open-source project built for the Nostr community.</p>
       <p>
         We encourage members of our community to contribute their knowledge and experience on

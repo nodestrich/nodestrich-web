@@ -63,29 +63,49 @@ function render_home_page(): string
     ob_start();
     ?>
 <section class="container page-section">
-  <div class="intro-block">
-    <h1>Welcome!</h1>
-    <p>
-      Nodestrich is a community for node runners using Nostr. Users of all levels are welcome to join,
-      open channels, share knowledge, and build the Nostr circular economy. We are active on Nostr and Signal.
-    </p>
-    <p>To learn more and join, click one of the icons below:</p>
-
-    <div class="social-panel" aria-label="Nodestrich community links">
-      <a href="https://amboss.space/community/6d41c0bd-6e39-40a2-a062-a809c2e8c2b5" target="_blank" rel="noopener noreferrer">
-        <img src="<?= asset('icon_amboss.png') ?>" alt="Amboss">
-      </a>
-      <a href="https://primal.net/p/npub1hxfkcs9gvtm49702rmwn2aeuvhkd2w6f0svm4sl84g8glhzx5u9srk5p6t" target="_blank" rel="noopener noreferrer">
-        <img src="<?= asset('icon_nostr.png') ?>" alt="Nostr">
-      </a>
-      <a href="/signal" target="_blank" rel="noopener noreferrer">
-        <img src="<?= asset('icon_Signal.png') ?>" alt="Signal">
-      </a>
+  <div class="hero">
+    <div class="hero-copy">
+      <?php $online = count(filter_active_members($members)); ?>
+      <?php if ($online > 0): ?><span class="eyebrow"><?= e((string) $online) ?> nodes online</span><?php endif; ?>
+      <h1>Run a node.<br>Join the flock.</h1>
+      <p>
+        Nodestrich is a community for node runners using Nostr. Users of all levels are welcome to join,
+        open channels, share knowledge, and build the Nostr circular economy.
+      </p>
+      <div class="join-path">
+        <h2 class="join-title">Become a member</h2>
+        <ol class="join-steps">
+          <li>
+            <a class="join-step" href="https://amboss.space/community/6d41c0bd-6e39-40a2-a062-a809c2e8c2b5" target="_blank" rel="noopener noreferrer">
+              <span class="step-num">1</span>
+              <img src="<?= asset('icon_amboss.png') ?>" alt="" class="icon-uncropped">
+              <span class="step-text"><strong>Sign up on Amboss</strong><small>Create an account and join the Nodestrich community.</small></span>
+              <span class="step-arrow" aria-hidden="true">&#8594;</span>
+            </a>
+          </li>
+          <li>
+            <a class="join-step" href="/signal" target="_blank" rel="noopener noreferrer">
+              <span class="step-num">2</span>
+              <img src="<?= asset('icon_Signal.png') ?>" alt="">
+              <span class="step-text"><strong>Join the Signal group</strong><small>Request approval there to complete your membership.</small></span>
+              <span class="step-arrow" aria-hidden="true">&#8594;</span>
+            </a>
+          </li>
+        </ol>
+        <a class="updates-link" href="https://primal.net/p/npub1hxfkcs9gvtm49702rmwn2aeuvhkd2w6f0svm4sl84g8glhzx5u9srk5p6t" target="_blank" rel="noopener noreferrer">
+          <img src="<?= asset('icon_nostr.png') ?>" alt="">
+          <span><span class="updates-label">Stay updated:</span> <strong>Follow us on Nostr</strong> for general info and updates.</span>
+        </a>
+      </div>
+    </div>
+    <div class="core" aria-hidden="true">
+      <span class="ring r1"></span><span class="ring r2"></span>
+      <img src="<?= asset('web-app-manifest-512x512.png') ?>" alt="" class="logomark">
     </div>
   </div>
 
   <div class="section-heading">
-    <h2>Community Stats</h2>
+    <h2>Community stats</h2>
   </div>
 
   <?php if (is_array($community)): ?>
@@ -502,18 +522,29 @@ function render_community_page(): string
 
   <div class="category-grid two-cols">
     <article class="panel">
-      <h2>Where to Find Us</h2>
-      <div class="link-stack community-links">
-        <a href="https://amboss.space/community/6d41c0bd-6e39-40a2-a062-a809c2e8c2b5" target="_blank" rel="noopener noreferrer">
-          <img src="<?= asset('icon_amboss.png') ?>" alt=""> <span>Amboss Community</span>
-        </a>
-        <a href="https://primal.net/p/npub1hxfkcs9gvtm49702rmwn2aeuvhkd2w6f0svm4sl84g8glhzx5u9srk5p6t" target="_blank" rel="noopener noreferrer">
-          <img src="<?= asset('icon_nostr.png') ?>" alt=""> <span>Nostr</span>
-        </a>
-        <a href="/signal" target="_blank" rel="noopener noreferrer">
-          <img src="<?= asset('icon_Signal.png') ?>" alt=""> <span>Signal Group</span>
-        </a>
-      </div>
+      <h2>Become a Member</h2>
+      <p class="muted">Membership takes two steps:</p>
+      <ol class="join-steps compact">
+        <li>
+          <a class="join-step" href="https://amboss.space/community/6d41c0bd-6e39-40a2-a062-a809c2e8c2b5" target="_blank" rel="noopener noreferrer">
+            <span class="step-num">1</span>
+            <img src="<?= asset('icon_amboss.png') ?>" alt="" class="icon-uncropped">
+            <span class="step-text"><strong>Sign up on Amboss</strong><small>Create an account and join the Nodestrich community.</small></span>
+          </a>
+        </li>
+        <li>
+          <a class="join-step" href="/signal" target="_blank" rel="noopener noreferrer">
+            <span class="step-num">2</span>
+            <img src="<?= asset('icon_Signal.png') ?>" alt="">
+            <span class="step-text"><strong>Join the Signal group</strong><small>Request approval there to complete your membership.</small></span>
+          </a>
+        </li>
+      </ol>
+      <h3 class="panel-subhead">Stay updated</h3>
+      <a class="updates-link" href="https://primal.net/p/npub1hxfkcs9gvtm49702rmwn2aeuvhkd2w6f0svm4sl84g8glhzx5u9srk5p6t" target="_blank" rel="noopener noreferrer">
+        <img src="<?= asset('icon_nostr.png') ?>" alt="">
+        <span><strong>Follow us on Nostr</strong> for general info and updates.</span>
+      </a>
     </article>
 
     <article class="panel">
