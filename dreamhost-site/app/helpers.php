@@ -20,7 +20,12 @@ function url(string $path): string
 
 function asset(string $path): string
 {
-    return '/' . ltrim($path, '/');
+    // Version on file mtime so deploys bust browser caches (Apache sends long
+    // max-age for static assets, which would otherwise serve stale CSS/JS).
+    $file = ROOT_PATH . '/' . ltrim($path, '/');
+    $version = is_file($file) ? '?v=' . filemtime($file) : '';
+
+    return '/' . ltrim($path, '/') . $version;
 }
 
 function is_active_path(string $currentPath, string $targetPath): bool
