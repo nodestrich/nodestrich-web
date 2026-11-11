@@ -1381,7 +1381,8 @@ body { isolation: isolate; }
   font-size: clamp(2.4rem, 5vw, 3.6rem);
   font-weight: 800;
   letter-spacing: -0.035em;
-  line-height: 1.02;
+  line-height: 1.2;
+  padding-block: 0.06em;
   background: linear-gradient(95deg, #fff 10%, #ff9cec 50%, #b79bff 80%, #7cecff);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1538,7 +1539,7 @@ body { isolation: isolate; }
 .hero h1 {
   margin: 20px 0 18px;
   font-size: clamp(2.6rem, 6vw, 4.6rem);
-  line-height: 0.98;
+  line-height: 1.15;
 }
 
 .hero p {
