@@ -28,6 +28,11 @@ function route_page(string $path): array
             'Interactive Lightning Network tools and a curated directory of resources for node operators.',
             render_tools_page(),
         ],
+        $path === '/donate' => [
+            'Donate',
+            'Support the Nodestrich community with a Lightning donation.',
+            render_donate_page(),
+        ],
         $path === '/community' => [
             'Community',
             'Connect with Lightning Network node operators and share knowledge.',
@@ -35,6 +40,71 @@ function route_page(string $path): array
         ],
         default => render_not_found_route(),
     };
+}
+
+function render_donate_page(): string
+{
+    ob_start();
+    ?>
+<section class="container page-section donation-page">
+  <h1>Keep Nodestrich running</h1>
+  <p class="lede">Help Nodestrich continue to provide support resources for the node-running community. Send a few sats with any Lightning wallet.</p>
+  <div class="donation-card" data-donation>
+    <form data-donation-amount hidden>
+      <label for="donation-amount">Donation amount</label>
+      <div class="donation-display">
+        <input id="donation-amount" name="amount" type="text" inputmode="numeric" autocomplete="off" value="0" maxlength="9" aria-describedby="donation-limits" required>
+        <span>sats</span>
+      </div>
+      <p id="donation-limits" class="muted small" data-donation-limits></p>
+      <div class="donation-presets" aria-label="Suggested amounts">
+        <button type="button" data-sats="1000">1k</button>
+        <button type="button" data-sats="5000">5k</button>
+        <button type="button" data-sats="21000">21k</button>
+      </div>
+      <div class="donation-keypad" aria-label="Amount keypad">
+        <?php foreach (['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', 'delete'] as $key): ?>
+          <button type="button" data-key="<?= e($key) ?>"<?= $key === 'delete' ? ' aria-label="Delete last digit"' : '' ?>><?= $key === 'delete' ? '&#9003;' : e($key) ?></button>
+        <?php endforeach; ?>
+      </div>
+      <label class="sr-only" for="donation-comment">Message (optional)</label>
+      <input id="donation-comment" name="comment" class="donation-comment" type="text" maxlength="255" placeholder="Message (optional)" value="I’m a Nodestrich supporter!">
+      <button class="button primary" type="submit" data-donation-submit disabled>Donate</button>
+      <p class="donation-error small" role="alert" data-donation-error></p>
+    </form>
+    <div class="donation-invoice" data-donation-invoice hidden>
+      <h2>Scan to donate</h2>
+      <button class="donation-qr-button" type="button" data-donation-zoom aria-label="Enlarge invoice QR code"></button>
+      <p class="muted small">Tap the QR code to enlarge</p>
+      <p data-donation-total></p>
+      <button class="button primary" type="button" data-copy-invoice>Copy invoice</button>
+      <a class="button secondary" data-open-invoice>Open in wallet</a>
+      <button class="button secondary" type="button" data-donation-back>Change amount</button>
+      <p class="muted small" role="status" data-donation-status></p>
+    </div>
+    <div data-donation-paid hidden>
+      <h2>Thank you! &#128156;</h2>
+      <p>Your donation helps keep the flock flying.</p>
+      <button class="button secondary" type="button" data-donation-again>Send another</button>
+    </div>
+    <div class="donation-address">
+      <img src="<?= asset('assets/donation-address.svg') ?>" width="240" height="240" alt="QR code for Lightning address nodestrich@nodestrich.com" data-donation-address-qr>
+      <a href="lightning:nodestrich@nodestrich.com" class="donation-address-link">nodestrich@nodestrich.com</a>
+      <button class="button secondary" type="button" data-copy-address hidden>Copy Lightning address</button>
+      <p class="muted small" data-donation-help>Scan or copy the address to send sats from any Lightning wallet.</p>
+      <button class="donation-text-button" type="button" data-donation-address-toggle hidden>Show address QR code</button>
+    </div>
+    <p class="sr-only" role="status" data-donation-copy-status></p>
+  </div>
+  <dialog class="donation-dialog" aria-label="Enlarged invoice QR code" data-donation-dialog>
+    <div data-donation-large-qr></div>
+    <form method="dialog"><button class="button secondary">Close</button></form>
+  </dialog>
+</section>
+<script defer src="<?= asset('assets/qrcode-generator.js') ?>"></script>
+<script defer src="<?= asset('assets/donate.js') ?>"></script>
+<?php
+    return (string) ob_get_clean();
 }
 
 function handle_signal_redirect(): void

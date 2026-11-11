@@ -4,6 +4,14 @@ This directory is the PHP version of the Nodestrich site for DreamHost shared Ap
 
 It is self-contained: PHP routes, CSS, JavaScript, content, and public assets all live inside this directory. It does not require Node, Next.js, Vercel, or Composer on DreamHost.
 
+## Donations
+
+The `/donate` page accepts Lightning donations to `nodestrich@nodestrich.com`. It resolves that address through LNURL-pay, requests invoices directly from the advertised HTTPS callback, and displays payment confirmation only when the provider's verification endpoint reports the same invoice as settled. No wallet connection or private keys are required. A static address QR code and wallet link remain available if JavaScript or the provider is unavailable.
+
+`assets/qrcode-generator.js` is the MIT-licensed qrcode-generator 2.0.4 library by Kazuhiko Arase, reused from the local Sidecar repository with its original license notice preserved in `assets/qrcode-generator.LICENSE`. Invoice QR codes are generated locally; no QR service receives payment data.
+
+## Configuration and deployment
+
 Copy `config.example.php` to `config.local.php` on DreamHost for server-only values:
 
 ```php

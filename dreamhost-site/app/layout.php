@@ -91,11 +91,20 @@ function render_layout(string $title, string $description, string $content, stri
         We encourage members of our community to contribute their knowledge and experience on
         <a href="https://github.com/nodestrich/nodestrich-web" target="_blank" rel="noopener noreferrer">GitHub</a>.
       </p>
+      <?= render_donation_link($currentPath) ?>
     </div>
   </footer>
 </body>
 </html>
 <?php
+}
+
+function render_donation_link(string $currentPath): string
+{
+    $active = $currentPath === '/donate';
+    return '<a href="/donate" class="donation-footer' . ($active ? ' is-active' : '') . '" aria-label="Donate to Nodestrich" title="Donate to Nodestrich"' . ($active ? ' aria-current="page"' : '') . '>'
+        . '<svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path fill="#a855f7" d="M16 28 4.2 16.5C-3 9.5 7.3-1 16 7.3 24.7-1 35 9.5 27.8 16.5Z"/><path fill="#fff" d="m18 7-8 11h5l-1 8 8-12h-5Z"/></svg>'
+        . '</a>';
 }
 
 function render_search_box(): string
