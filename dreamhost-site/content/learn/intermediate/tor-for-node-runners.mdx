@@ -5,7 +5,7 @@ category: 'intermediate'
 tags: ['tor', 'onion', 'clearnet', 'hybrid', 'privacy', 'networking', 'core-lightning', 'cln', 'startos']
 author: 'Nodestrich Community'
 publishedAt: '2026-11-22'
-updatedAt: '2026-11-22'
+updatedAt: '2026-11-24'
 ---
 
 # Tor for Node Runners: Clearnet, Tor or Hybrid
@@ -103,6 +103,18 @@ Your node announces only the IP, but can still open channels to Tor-only peers.
 - **A Tor relay next to your node is a separate decision.** See "Is it safe to run a Tor relay at home next to my node?" in the [FAQ](/learn/beginner/tor-faq).
 
 ---
+
+## Moving an Existing Node to Tor Only
+
+A node that started on clearnet usually still has clearnet settings somewhere, and a Tor address doesn't help much if the same node keeps announcing its public IP. Before you rely on Tor to hide your IP, go through this list:
+
+1. **Find every address setting.** `lightning-cli listconfigs` shows the options CLN actually runs with, including those your platform passes on the command line rather than through your config file. Look at `addr`, `announce-addr`, `bind-addr` and `announce-addr-discovered`.
+2. **Remove public addresses.** Drop any `addr=` or `announce-addr=` that names a public IPv4 or IPv6 address, or a `dns:` hostname that points to one. Keep a local `bind-addr` (for example `127.0.0.1:9735`) for the onion service to forward to.
+3. **Switch off IP discovery.** Set `announce-addr-discovered=false`. Its default, `auto`, announces a public IP CLN discovered on its own whenever there is nothing else to announce, for example when the onion service fails to come up.
+4. **Send everything through Tor.** `proxy=127.0.0.1:9050` plus `always-use-proxy=true`, so outgoing connections and DNS lookups don't reveal your IP either.
+5. **Restart and verify.** `lightning-cli getinfo` should list only `torv3` entries under `address`. Then look up your node on an explorer once the new announcement has spread; it only propagates if your node has at least one public channel.
+6. **Expect history to stay.** Peers keep your last announcement until a newer one replaces it, and some explorers keep old addresses in their history. Switching to Tor hides your IP from now on; it doesn't erase what was already public. If your home IP was announced before, assume it is known.
+7. **Check your clearnet-only peers.** They can't open connections to an onion address. Your node can still reach them outward through Tor, so existing channels usually keep working, but they reconnect only when your node initiates the connection.
 
 ## Giving Back to the Tor Network
 
